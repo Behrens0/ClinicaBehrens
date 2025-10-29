@@ -1,0 +1,121 @@
+<div class="dashboard-container">
+  <h1>Dashboard Administrador</h1>
+  <p>Bienvenido al dashboard de administradores</p>
+  
+  <div class="admin-actions">
+    <button routerLink="/registro" class="btn-registrar">
+      <i class="fas fa-user-plus"></i>
+      Registrar Usuario
+    </button>
+    
+    <div class="action-description">
+      <p>Desde aquí puedes registrar nuevos:</p>
+      <ul>
+        <li>Pacientes</li>
+        <li>Especialistas</li>
+        <li>Administradores</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Especialistas Pendientes -->
+  <div class="section-pendientes" *ngIf="especialistasPendientes.length > 0">
+    <h2>Especialistas Pendientes de Aprobación</h2>
+    <div class="pendientes-grid">
+      <div *ngFor="let esp of especialistasPendientes" class="pendiente-card">
+        <div class="pendiente-header">
+          <div class="pendiente-avatar">
+            <img *ngIf="esp.imagen_perfil" [src]="esp.imagen_perfil" [alt]="esp.nombre + ' ' + esp.apellido" />
+            <div *ngIf="!esp.imagen_perfil" class="avatar-placeholder">
+              {{ esp.nombre.charAt(0) }}{{ esp.apellido.charAt(0) }}
+            </div>
+          </div>
+          <div class="pendiente-info">
+            <h3>{{ esp.nombre }} {{ esp.apellido }}</h3>
+            <p><strong>DNI:</strong> {{ esp.dni }}</p>
+            <p><strong>Especialidad:</strong> {{ esp.especialidad }}</p>
+            <p><strong>Email:</strong> {{ esp.email }}</p>
+            <p><strong>Edad:</strong> {{ esp.edad }}</p>
+          </div>
+        </div>
+        <div class="pendiente-actions">
+          <button (click)="aprobarEspecialista(esp)" class="btn-aprobar">
+            ✓ Aprobar
+          </button>
+          <button (click)="rechazarEspecialista(esp)" class="btn-rechazar">
+            ✕ Rechazar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listado de Usuarios -->
+  <div class="section-usuarios">
+    <h2>Usuarios del Sistema</h2>
+    <div class="usuarios-stats">
+      <div class="stat-card">
+        <h3>{{ getUsuariosPorTipo('paciente').length }}</h3>
+        <p>Pacientes</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ getUsuariosPorTipo('especialista').length }}</h3>
+        <p>Especialistas</p>
+      </div>
+      <div class="stat-card">
+        <h3>{{ getUsuariosPorTipo('administrador').length }}</h3>
+        <p>Administradores</p>
+      </div>
+    </div>
+
+    <div class="usuarios-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Foto</th>
+            <th>Tipo</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>DNI</th>
+            <th>Email</th>
+            <th>Especialidad</th>
+            <th>Obra Social</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let usuario of usuarios">
+            <td>
+              <div class="user-avatar">
+                <img *ngIf="usuario.imagen_perfil" 
+                     [src]="usuario.imagen_perfil" 
+                     [alt]="usuario.nombre + ' ' + usuario.apellido" />
+                <div *ngIf="!usuario.imagen_perfil" class="avatar-placeholder">
+                  {{ usuario.nombre.charAt(0) }}{{ usuario.apellido.charAt(0) }}
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [class]="'badge-' + usuario.tipo">
+                {{ usuario.tipo }}
+              </span>
+            </td>
+            <td>{{ usuario.nombre }}</td>
+            <td>{{ usuario.apellido }}</td>
+            <td>{{ usuario.dni }}</td>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.especialidad || '-' }}</td>
+            <td>{{ usuario.obra_social || '-' }}</td>
+            <td>
+              <span *ngIf="usuario.tipo === 'especialista'" 
+                    [class]="getEstadoEspecialista(usuario)">
+                {{ getEstadoEspecialistaTexto(usuario) }}
+              </span>
+              <span *ngIf="usuario.tipo !== 'especialista'">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

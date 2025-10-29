@@ -1,0 +1,185 @@
+<div class="container">
+  <div class="card">
+    <div class="card-header">
+      <h2>Crear Historia Clínica</h2>
+      <p class="text-muted">Completa los datos de la atención médica</p>
+    </div>
+
+    <div class="card-body" *ngIf="turno && paciente && especialista">
+      <!-- Información del turno -->
+      <div class="info-section">
+        <h4>Información del Turno</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Paciente:</strong> {{ paciente.nombre }} {{ paciente.apellido }}</p>
+            <p><strong>Especialidad:</strong> {{ turno.especialidad }}</p>
+          </div>
+          <div class="col-md-6">
+            <p><strong>Fecha:</strong> {{ turno.fecha | date:'dd/MM/yyyy' }}</p>
+            <p><strong>Hora:</strong> {{ turno.hora }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de historia clínica -->
+      <form [formGroup]="form" (ngSubmit)="guardarHistoriaClinica()">
+        <div class="form-section">
+          <h4>Datos Fijos</h4>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="altura">Altura (m)</label>
+                <input 
+                  type="number" 
+                  id="altura" 
+                  formControlName="altura" 
+                  class="form-control" 
+                  step="0.01" 
+                  min="0.5" 
+                  max="3"
+                  placeholder="1.75">
+                <div class="error-message" *ngIf="form.get('altura')?.invalid && form.get('altura')?.touched">
+                  Altura requerida (0.5 - 3m)
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="peso">Peso (kg)</label>
+                <input 
+                  type="number" 
+                  id="peso" 
+                  formControlName="peso" 
+                  class="form-control" 
+                  step="0.1" 
+                  min="1" 
+                  max="500"
+                  placeholder="70">
+                <div class="error-message" *ngIf="form.get('peso')?.invalid && form.get('peso')?.touched">
+                  Peso requerido (1 - 500kg)
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="temperatura">Temperatura (°C)</label>
+                <input 
+                  type="number" 
+                  id="temperatura" 
+                  formControlName="temperatura" 
+                  class="form-control" 
+                  step="0.1" 
+                  min="30" 
+                  max="45"
+                  placeholder="36.5">
+                <div class="error-message" *ngIf="form.get('temperatura')?.invalid && form.get('temperatura')?.touched">
+                  Temperatura requerida (30 - 45°C)
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="presion">Presión</label>
+                <input 
+                  type="text" 
+                  id="presion" 
+                  formControlName="presion" 
+                  class="form-control" 
+                  placeholder="120/80">
+                <div class="error-message" *ngIf="form.get('presion')?.invalid && form.get('presion')?.touched">
+                  Presión requerida
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos dinámicos -->
+        <div class="form-section">
+          <h4>Datos Dinámicos (máximo 3)</h4>
+          <div class="row">
+            <div class="col-md-5">
+              <div class="form-group">
+                <label for="claveDinamica">Clave</label>
+                <input 
+                  type="text" 
+                  id="claveDinamica" 
+                  formControlName="claveDinamica" 
+                  class="form-control" 
+                  placeholder="Ej: caries, diabetes, etc.">
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="form-group">
+                <label for="valorDinamico">Valor</label>
+                <input 
+                  type="text" 
+                  id="valorDinamico" 
+                  formControlName="valorDinamico" 
+                  class="form-control" 
+                  placeholder="Ej: 4, positivo, etc.">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <button 
+                type="button" 
+                class="btn btn-primary mt-4" 
+                (click)="agregarDatoDinamico()"
+                [disabled]="datosDinamicos.length >= 3">
+                Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de datos dinámicos -->
+          <div class="datos-dinamicos" *ngIf="datosDinamicos.length > 0">
+            <h5>Datos Agregados:</h5>
+            <div class="dato-item" *ngFor="let dato of datosDinamicos; let i = index">
+              <span class="dato-clave">{{ dato.clave }}:</span>
+              <span class="dato-valor">{{ dato.valor }}</span>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-danger" 
+                (click)="eliminarDatoDinamico(i)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensajes -->
+        <div class="alert alert-danger" *ngIf="mensaje && !esExito">
+          {{ mensaje }}
+        </div>
+        <div class="alert alert-success" *ngIf="mensaje && esExito">
+          {{ mensaje }}
+        </div>
+
+        <!-- Botones -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="cancelar()"
+            [disabled]="isLoading">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="form.invalid || isLoading">
+            <span *ngIf="isLoading">Guardando...</span>
+            <span *ngIf="!isLoading">Guardar Historia Clínica</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card-body" *ngIf="!turno || !paciente || !especialista">
+      <div class="alert alert-info">
+        <p *ngIf="mensaje">{{ mensaje }}</p>
+        <p *ngIf="!mensaje">Cargando datos...</p>
+      </div>
+    </div>
+  </div>
+</div> 

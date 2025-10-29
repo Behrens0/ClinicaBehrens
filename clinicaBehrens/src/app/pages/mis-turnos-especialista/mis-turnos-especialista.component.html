@@ -1,0 +1,66 @@
+<div class="mis-turnos-especialista">
+  <h2>Mis Turnos (Especialista)</h2>
+
+  <!-- Filtro único -->
+  <div class="filtro-turnos">
+    <label>Filtrar por:</label>
+    <button [class.active]="filtroTipo === 'especialidad'" (click)="setFiltroTipo('especialidad')">Especialidad</button>
+    <button [class.active]="filtroTipo === 'paciente'" (click)="setFiltroTipo('paciente')">Paciente</button>
+    <input type="text" [(ngModel)]="filtro" (input)="filtrarTurnos()" placeholder="Buscar..." />
+  </div>
+
+  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+
+  <div *ngIf="turnosFiltrados.length === 0" class="sin-turnos">No tienes turnos para mostrar.</div>
+
+  <div class="turnos-lista">
+    <div *ngFor="let turno of turnosFiltrados" class="turno-item">
+      <div class="turno-info">
+        <div><strong>Especialidad:</strong> {{ turno.especialidad }}</div>
+        <div><strong>Paciente:</strong> {{ turno.pacienteNombre }}</div>
+        <div><strong>Fecha:</strong> {{ turno.fecha | date:'short' }}</div>
+        <div><strong>Estado:</strong> <span class="estado estado-{{ turno.estado }}">{{ estadoTurno(turno) }}</span></div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="turno-acciones">
+        <!-- Cancelar turno -->
+        <button *ngIf="puedeCancelar(turno)" (click)="mostrarDialogoCancelacion(turno.id)">Cancelar</button>
+        <!-- Rechazar turno -->
+        <button *ngIf="puedeRechazar(turno)" (click)="mostrarDialogoRechazo(turno.id)">Rechazar</button>
+        <!-- Aceptar turno -->
+        <button *ngIf="puedeAceptar(turno)" (click)="aceptarTurno(turno)">Aceptar</button>
+        <!-- Finalizar turno -->
+        <button *ngIf="puedeFinalizar(turno)" (click)="mostrarDialogoFinalizar(turno.id)">Finalizar</button>
+        <!-- Crear Historia Clínica -->
+        <button *ngIf="puedeCrearHistoriaClinica(turno)" (click)="crearHistoriaClinica(turno.id)" class="btn-historia-clinica">Crear Historia Clínica</button>
+        <!-- Ver reseña -->
+        <button *ngIf="puedeVerResena(turno)" (click)="mensaje = turno.resena || ''">Ver Reseña</button>
+      </div>
+
+      <!-- Diálogo cancelar turno -->
+      <div *ngIf="mostrarComentarioCancelacion === turno.id" class="dialogo">
+        <label>¿Por qué cancelas el turno?</label>
+        <textarea [(ngModel)]="comentarioCancelacion" rows="2"></textarea>
+        <button (click)="cancelarTurno(turno)">Confirmar Cancelación</button>
+        <button (click)="mostrarComentarioCancelacion = null">Cerrar</button>
+      </div>
+
+      <!-- Diálogo rechazar turno -->
+      <div *ngIf="mostrarComentarioRechazo === turno.id" class="dialogo">
+        <label>¿Por qué rechazas el turno?</label>
+        <textarea [(ngModel)]="comentarioRechazo" rows="2"></textarea>
+        <button (click)="rechazarTurno(turno)">Confirmar Rechazo</button>
+        <button (click)="mostrarComentarioRechazo = null">Cerrar</button>
+      </div>
+
+      <!-- Diálogo finalizar turno -->
+      <div *ngIf="mostrarFinalizar === turno.id" class="dialogo">
+        <label>Reseña / Diagnóstico:</label>
+        <textarea [(ngModel)]="comentarioFinalizar" rows="3" placeholder="Describe la consulta y diagnóstico"></textarea>
+        <button (click)="finalizarTurno(turno)">Finalizar Turno</button>
+        <button (click)="mostrarFinalizar = null">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

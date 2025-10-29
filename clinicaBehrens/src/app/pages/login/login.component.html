@@ -1,0 +1,147 @@
+<div class="login-container">
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="logo-container">
+        <img src="https://nxzgjzkqlpodsyhaukna.supabase.co/storage/v1/object/public/clinica//clinica-logo2.jpg" alt="Clínica Logo" class="logo" />
+      </div>
+      <h1 class="title">Bienvenido</h1>
+      <p class="subtitle">Inicia sesión en tu cuenta</p>
+    </div>
+
+    <!-- Información de sesión activa -->
+    <div class="session-info" *ngIf="sesionActiva && usuarioActual">
+      <div class="session-alert">
+        <i class="session-icon">👤</i>
+        <div class="session-details">
+          <p class="session-text">Sesión activa detectada</p>
+          <p class="session-email">{{ usuarioActual.email }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de Login -->
+    <form [formGroup]="loginForm" (ngSubmit)="iniciarSesion()" class="login-form">
+      <!-- Campo Email -->
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <div class="input-container">
+          <i class="icon email-icon">📧</i>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="tu@email.com"
+            [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          />
+        </div>
+        <div class="error-message" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">El email es requerido</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Ingresa un email válido</span>
+        </div>
+      </div>
+
+      <!-- Campo Password -->
+      <div class="form-group">
+        <label for="password" class="form-label">Contraseña</label>
+        <div class="input-container">
+          <i class="icon password-icon">🔒</i>
+          <input
+            [type]="mostrarPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="form-input"
+            placeholder="Tu contraseña"
+            [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePassword()"
+            [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <i class="icon">{{ mostrarPassword ? '👁️' : '👁️‍🗨️' }}</i>
+          </button>
+        </div>
+        <div class="error-message" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida</span>
+          <span *ngIf="loginForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</span>
+        </div>
+      </div>
+
+      <!-- Botón de Login -->
+      <button
+        type="submit"
+        class="login-button"
+        [disabled]="loginForm.invalid || isLoading"
+        [class.loading]="isLoading"
+      >
+        <span *ngIf="!isLoading">Iniciar Sesión</span>
+        <span *ngIf="isLoading" class="loading-text">
+          <i class="spinner">⏳</i> Iniciando sesión...
+        </span>
+      </button>
+
+      <!-- Mensajes de estado -->
+      <div class="message-container" *ngIf="mensaje">
+        <div class="message" [class.success]="esExito" [class.error]="!esExito">
+          <i class="message-icon">{{ esExito ? '✅' : '❌' }}</i>
+          {{ mensaje }}
+        </div>
+      </div>
+    </form>
+
+    <!-- Acceso Rápido -->
+    <div class="quick-access">
+      <h3 class="quick-access-title">Acceso Rápido</h3>
+      <div class="quick-access-buttons">
+        <button
+          *ngFor="let acceso of accesoRapido"
+          type="button"
+          class="quick-access-button"
+          (click)="accesoRapidoClick(acceso)"
+          [disabled]="isLoading"
+        >
+          <i class="quick-access-icon">
+            {{ acceso.label === 'Admin' ? '👨‍⚕️' : acceso.label === 'Paciente' ? '👤' : '👩‍⚕️' }}
+          </i>
+          {{ acceso.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Enlaces adicionales -->
+    <div class="additional-links">
+      <button type="button" class="link-button" (click)="recuperarPassword()">
+        <i class="link-icon">🔑</i>
+        ¿Olvidaste tu contraseña?
+      </button>
+      
+      <div class="divider">
+        <span>o</span>
+      </div>
+      
+      <button type="button" class="register-button" (click)="irARegistro()">
+        <i class="register-icon">📝</i>
+        Crear nueva cuenta
+      </button>
+      
+      <div class="divider">
+        <span>o</span>
+      </div>
+      
+      <button type="button" class="logout-button" (click)="cerrarSesion()">
+        <i class="logout-icon">🚪</i>
+        Cerrar sesión actual
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p class="footer-text">
+        © 2025 Clínica Behrens. Todos los derechos reservados.
+      </p>
+    </div>
+  </div>
+</div>

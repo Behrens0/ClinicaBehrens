@@ -1,0 +1,472 @@
+// Variables
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$secondary-color: #64748b;
+$success-color: #10b981;
+$error-color: #ef4444;
+$warning-color: #f59e0b;
+$background-color: #f8fafc;
+$card-background: #ffffff;
+$border-color: #e2e8f0;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin button-reset {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+@mixin input-styles {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid $border-color;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background-color: $card-background;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  &.error {
+    border-color: $error-color;
+  }
+}
+
+// Contenedor principal
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  @include flex-center;
+  padding: 20px;
+}
+
+// Tarjeta de login
+.login-card {
+  background: $card-background;
+  border-radius: 16px;
+  box-shadow: $shadow;
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $primary-color, $success-color);
+  }
+}
+
+// Header
+.login-header {
+  text-align: center;
+  margin-bottom: 32px;
+  
+  .logo-container {
+    margin-bottom: 16px;
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+    }
+  }
+  
+  .title {
+    font-size: 28px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 8px 0;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// Información de sesión activa
+.session-info {
+  margin-bottom: 24px;
+  
+  .session-alert {
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .session-icon {
+      font-size: 20px;
+      color: $primary-color;
+    }
+    
+    .session-details {
+      flex: 1;
+      
+      .session-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: $primary-color;
+        margin: 0 0 4px 0;
+      }
+      
+      .session-email {
+        font-size: 12px;
+        color: $text-secondary;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Formulario
+.login-form {
+  margin-bottom: 32px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 8px;
+}
+
+.input-container {
+  position: relative;
+  @include flex-center;
+  
+  .icon {
+    position: absolute;
+    left: 16px;
+    font-size: 18px;
+    color: $text-secondary;
+    z-index: 1;
+  }
+  
+  .form-input {
+    @include input-styles;
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+  
+  .toggle-password {
+    @include button-reset;
+    position: absolute;
+    right: 12px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+    
+    &:hover {
+      background-color: $background-color;
+    }
+    
+    .icon {
+      position: static;
+      font-size: 16px;
+      color: $text-secondary;
+    }
+  }
+}
+
+.error-message {
+  margin-top: 8px;
+  font-size: 14px;
+  color: $error-color;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// Botón de login
+.login-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, $primary-color, $primary-hover);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  &.loading {
+    background: linear-gradient(135deg, $secondary-color, $text-secondary);
+  }
+  
+  .loading-text {
+    @include flex-center;
+    gap: 8px;
+    
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Mensajes
+.message-container {
+  margin-top: 16px;
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: $success-color;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  
+  &.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: $error-color;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+  
+  .message-icon {
+    font-size: 16px;
+  }
+}
+
+// Acceso rápido
+.quick-access {
+  margin-bottom: 32px;
+  padding: 24px;
+  background-color: $background-color;
+  border-radius: 12px;
+  border: 1px solid $border-color;
+  
+  .quick-access-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0 0 16px 0;
+    text-align: center;
+  }
+  
+  .quick-access-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  
+  .quick-access-button {
+    @include button-reset;
+    padding: 12px 16px;
+    background-color: $card-background;
+    border: 2px solid $border-color;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: $text-primary;
+    transition: all 0.3s ease;
+    @include flex-center;
+    gap: 8px;
+    
+    &:hover:not(:disabled) {
+      border-color: $primary-color;
+      background-color: rgba(37, 99, 235, 0.05);
+      transform: translateY(-1px);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .quick-access-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+// Enlaces adicionales
+.additional-links {
+  text-align: center;
+  margin-bottom: 24px;
+  
+  .link-button {
+    @include button-reset;
+    color: $primary-color;
+    font-size: 14px;
+    text-decoration: underline;
+    margin-bottom: 16px;
+    @include flex-center;
+    gap: 4px;
+    
+    &:hover {
+      color: $primary-hover;
+    }
+    
+    .link-icon {
+      font-size: 14px;
+    }
+  }
+  
+  .divider {
+    position: relative;
+    margin: 20px 0;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: $border-color;
+    }
+    
+    span {
+      background-color: $card-background;
+      padding: 0 16px;
+      color: $text-secondary;
+      font-size: 14px;
+    }
+  }
+  
+  .register-button {
+    @include button-reset;
+    width: 100%;
+    padding: 12px 16px;
+    background-color: $success-color;
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    @include flex-center;
+    gap: 8px;
+    
+    &:hover {
+      background-color: darken($success-color, 10%);
+      transform: translateY(-1px);
+    }
+    
+    .register-icon {
+      font-size: 16px;
+    }
+  }
+  
+  .logout-button {
+    @include button-reset;
+    width: 100%;
+    padding: 12px 16px;
+    background-color: $error-color;
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    @include flex-center;
+    gap: 8px;
+    
+    &:hover {
+      background-color: darken($error-color, 10%);
+      transform: translateY(-1px);
+    }
+    
+    .logout-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+// Footer
+.login-footer {
+  text-align: center;
+  
+  .footer-text {
+    font-size: 12px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .login-container {
+    padding: 16px;
+  }
+  
+  .login-card {
+    padding: 24px;
+  }
+  
+  .login-header {
+    .title {
+      font-size: 24px;
+    }
+  }
+  
+  .quick-access {
+    .quick-access-buttons {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 20px;
+  }
+  
+  .input-container {
+    .form-input {
+      font-size: 16px; // Evita zoom en iOS
+    }
+  }
+}

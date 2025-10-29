@@ -1,0 +1,93 @@
+<div class="pacientes-especialista">
+  <h2>Mis Pacientes (Especialista)</h2>
+
+  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+
+  <div *ngIf="pacientes.length === 0" class="sin-pacientes">
+    Aún no has atendido a ningún paciente.
+  </div>
+
+  <div *ngIf="pacientes.length > 0" class="pacientes-lista">
+    <div class="pacientes-grid">
+      <div *ngFor="let paciente of pacientes" 
+           class="paciente-item" 
+           [class.seleccionado]="pacienteSeleccionado === paciente.user_id"
+           (click)="seleccionarPaciente(paciente.user_id)">
+        <div class="paciente-info">
+          <h3>{{ obtenerNombreCompleto(paciente) }}</h3>
+          <p><strong>DNI:</strong> {{ paciente.dni }}</p>
+          <p><strong>Email:</strong> {{ paciente.email }}</p>
+          <p *ngIf="paciente.obra_social"><strong>Obra Social:</strong> {{ paciente.obra_social }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="pacienteSeleccionado" class="historias-seccion">
+      <h3>Historia Clínica de {{ getNombrePacienteSeleccionado() }}</h3>
+      
+      <div *ngIf="!historiasPorPaciente[pacienteSeleccionado] || historiasPorPaciente[pacienteSeleccionado].length === 0" class="sin-historias">
+        No hay historias clínicas registradas para este paciente.
+      </div>
+
+      <div *ngIf="historiasPorPaciente[pacienteSeleccionado] && historiasPorPaciente[pacienteSeleccionado].length > 0" class="historias-lista">
+        <div *ngFor="let historia of historiasPorPaciente[pacienteSeleccionado]" class="historia-item">
+          <div class="historia-header">
+            <h4>Atención del {{ formatearFecha(historia.historia.fecha_atencion) }}</h4>
+          </div>
+
+          <div class="historia-datos">
+            <div class="datos-fijos">
+              <h5>Datos Fijos</h5>
+              <div class="datos-grid">
+                <div class="dato">
+                  <span class="label">Altura:</span>
+                  <span class="valor">{{ historia.historia.altura }}m</span>
+                </div>
+                <div class="dato">
+                  <span class="label">Peso:</span>
+                  <span class="valor">{{ historia.historia.peso }}kg</span>
+                </div>
+                <div class="dato">
+                  <span class="label">Temperatura:</span>
+                  <span class="valor">{{ historia.historia.temperatura }}°C</span>
+                </div>
+                <div class="dato">
+                  <span class="label">Presión:</span>
+                  <span class="valor">{{ historia.historia.presion }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="historia.historia.datos_dinamicos.length > 0" class="datos-dinamicos">
+              <h5>Datos Dinámicos</h5>
+              <div class="datos-grid">
+                <div *ngFor="let dato of historia.historia.datos_dinamicos" class="dato">
+                  <span class="label">{{ dato.clave }}:</span>
+                  <span class="valor">{{ dato.valor }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="turno-info">
+              <h5>Información del Turno</h5>
+              <div class="datos-grid">
+                <div class="dato">
+                  <span class="label">Fecha del turno:</span>
+                  <span class="valor">{{ historia.turno.fecha | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="dato">
+                  <span class="label">Hora:</span>
+                  <span class="valor">{{ historia.turno.hora }}</span>
+                </div>
+                <div class="dato">
+                  <span class="label">Estado:</span>
+                  <span class="valor estado-{{ historia.turno.estado }}">{{ historia.turno.estado }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

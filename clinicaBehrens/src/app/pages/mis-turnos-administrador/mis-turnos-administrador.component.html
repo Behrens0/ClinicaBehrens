@@ -1,0 +1,41 @@
+<div class="mis-turnos-administrador">
+  <h2>Turnos (Administrador)</h2>
+
+  <!-- Filtro único -->
+  <div class="filtro-turnos">
+    <label>Filtrar por:</label>
+    <button [class.active]="filtroTipo === 'especialidad'" (click)="setFiltroTipo('especialidad')">Especialidad</button>
+    <button [class.active]="filtroTipo === 'especialista'" (click)="setFiltroTipo('especialista')">Especialista</button>
+    <input type="text" [(ngModel)]="filtro" (input)="filtrarTurnos()" placeholder="Buscar..." />
+  </div>
+
+  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+
+  <div *ngIf="turnosFiltrados.length === 0" class="sin-turnos">No hay turnos para mostrar.</div>
+
+  <div class="turnos-lista">
+    <div *ngFor="let turno of turnosFiltrados" class="turno-item">
+      <div class="turno-info">
+        <div><strong>Especialidad:</strong> {{ turno.especialidad }}</div>
+        <div><strong>Especialista:</strong> {{ turno.especialistaNombre }}</div>
+        <div><strong>Paciente:</strong> {{ turno.pacienteNombre }}</div>
+        <div><strong>Fecha:</strong> {{ turno.fecha | date:'short' }}</div>
+        <div><strong>Estado:</strong> <span class="estado estado-{{ turno.estado }}">{{ estadoTurno(turno) }}</span></div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="turno-acciones">
+        <!-- Cancelar turno -->
+        <button *ngIf="puedeCancelar(turno)" (click)="mostrarDialogoCancelacion(turno.id)">Cancelar</button>
+      </div>
+
+      <!-- Diálogo cancelar turno -->
+      <div *ngIf="mostrarComentarioCancelacion === turno.id" class="dialogo">
+        <label>¿Por qué cancelas el turno?</label>
+        <textarea [(ngModel)]="comentarioCancelacion" rows="2"></textarea>
+        <button (click)="cancelarTurno(turno)">Confirmar Cancelación</button>
+        <button (click)="mostrarComentarioCancelacion = null">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,226 @@
+.pacientes-especialista {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.mensaje {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.sin-pacientes {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.pacientes-lista {
+  .pacientes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .paciente-item {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+      }
+
+      &.seleccionado {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+      }
+
+      .paciente-info {
+        h3 {
+          color: #495057;
+          margin: 0 0 1rem 0;
+          font-size: 1.2rem;
+        }
+
+        p {
+          margin: 0.5rem 0;
+          color: #6c757d;
+          font-size: 0.9rem;
+
+          strong {
+            color: #495057;
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+  }
+
+  .historias-seccion {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    h3 {
+      color: #333;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 0.5rem;
+    }
+
+    .sin-historias {
+      text-align: center;
+      padding: 2rem;
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    .historias-lista {
+      .historia-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+        .historia-header {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 1rem 1.5rem;
+
+          h4 {
+            margin: 0;
+            font-size: 1.1rem;
+          }
+        }
+
+        .historia-datos {
+          padding: 1.5rem;
+
+          .datos-fijos, .datos-dinamicos, .turno-info {
+            margin-bottom: 1.5rem;
+
+            h5 {
+              color: #495057;
+              margin-bottom: 1rem;
+              font-size: 1rem;
+              border-bottom: 1px solid #e9ecef;
+              padding-bottom: 0.5rem;
+            }
+
+            .datos-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 1rem;
+
+              .dato {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem;
+                background: #f8f9fa;
+                border-radius: 6px;
+                border: 1px solid #e9ecef;
+
+                .label {
+                  font-weight: 600;
+                  color: #495057;
+                }
+
+                .valor {
+                  color: #6c757d;
+                  font-weight: 500;
+
+                  &.estado-pendiente {
+                    color: #856404;
+                    background: #fff3cd;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                  }
+
+                  &.estado-aceptado {
+                    color: #0c5460;
+                    background: #d1ecf1;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                  }
+
+                  &.estado-realizado {
+                    color: #155724;
+                    background: #d4edda;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                  }
+
+                  &.estado-cancelado {
+                    color: #721c24;
+                    background: #f8d7da;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                  }
+
+                  &.estado-rechazado {
+                    color: #721c24;
+                    background: #f5c6cb;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .pacientes-especialista {
+    padding: 1rem;
+  }
+
+  .pacientes-lista {
+    .pacientes-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .historias-seccion {
+      padding: 1.5rem;
+
+      .historias-lista {
+        .historia-item {
+          .historia-datos {
+            padding: 1rem;
+
+            .datos-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        }
+      }
+    }
+  }
+} 

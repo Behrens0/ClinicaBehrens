@@ -1,0 +1,57 @@
+<div class="solicitar-turno">
+  <h2>Solicitar Turno</h2>
+
+  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+
+  <form (ngSubmit)="solicitarTurno()" class="form-turno">
+    <!-- Selección de paciente (solo admin) -->
+    <div *ngIf="esAdmin">
+      <label>Paciente:</label>
+      <div class="opciones-lista">
+        <button type="button" *ngFor="let p of pacientes" [class.selected]="pacienteSeleccionado === p" (click)="pacienteSeleccionado = p">
+          {{ p.nombre }} {{ p.apellido }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Selección de especialidad -->
+    <label>Especialidad:</label>
+    <div class="opciones-lista">
+      <button type="button" *ngFor="let esp of especialidades" [class.selected]="especialidadSeleccionada === esp" (click)="seleccionarEspecialidad(esp)">
+        {{ esp }}
+      </button>
+    </div>
+
+    <!-- Selección de especialista -->
+    <div *ngIf="especialidadSeleccionada">
+      <label>Especialista:</label>
+      <div class="opciones-lista">
+        <button type="button" *ngFor="let e of especialistasFiltrados" [class.selected]="especialistaSeleccionado === e" (click)="seleccionarEspecialista(e)">
+          {{ e.nombre }} {{ e.apellido }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Selección de día -->
+    <div *ngIf="especialistaSeleccionado && diasDisponibles.length">
+      <label>Día:</label>
+      <div class="opciones-lista">
+        <button type="button" *ngFor="let d of diasDisponibles" [class.selected]="diaSeleccionado === d" (click)="seleccionarDia(d)">
+          {{ d }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Selección de horario -->
+    <div *ngIf="diaSeleccionado">
+      <label>Horario:</label>
+      <div class="opciones-lista">
+        <button type="button" *ngFor="let h of horariosFiltrados" [class.selected]="horarioSeleccionado === h" (click)="seleccionarHorario(h)">
+          {{ h.hora_inicio }} a {{ h.hora_fin }}
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="!especialidadSeleccionada || !especialistaSeleccionado || !diaSeleccionado || !horarioSeleccionado || (esAdmin && !pacienteSeleccionado)">Solicitar Turno</button>
+  </form>
+</div>
