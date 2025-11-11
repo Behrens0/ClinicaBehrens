@@ -1,40 +1,90 @@
-<div class="mis-turnos-administrador">
-  <h2>Turnos (Administrador)</h2>
+<div class="mis-turnos-container">
+  <h2>Turnos de la Clínica</h2>
+  
+  <div *ngIf="mensaje" class="mensaje-exito-turno">
+    {{ mensaje }}
+  </div>
+  
+  <input 
+    type="text" 
+    [(ngModel)]="filtro" 
+    (input)="filtrarTurnos()" 
+    placeholder="🔎 Buscar por especialidad o especialista..." 
+    class="filtro-input" />
 
-  <!-- Filtro único -->
-  <div class="filtro-turnos">
-    <label>Filtrar por:</label>
-    <button [class.active]="filtroTipo === 'especialidad'" (click)="setFiltroTipo('especialidad')">Especialidad</button>
-    <button [class.active]="filtroTipo === 'especialista'" (click)="setFiltroTipo('especialista')">Especialista</button>
-    <input type="text" [(ngModel)]="filtro" (input)="filtrarTurnos()" placeholder="Buscar..." />
+  <div *ngIf="turnosFiltrados.length === 0" class="mensaje-vacio">
+    <span>🙁 No hay turnos para mostrar.</span>
   </div>
 
-  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+  <table *ngIf="turnosFiltrados.length > 0" class="tabla-turnos">
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Especialista</th>
+        <th>Especialidad</th>
+        <th>Fecha</th>
+        <th>Horario</th>
+        <th>Estado</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let turno of turnosFiltrados">
+        <td>{{ turno.pacientenombre || '' }}</td>
+        <td>{{ turno.especialistanombre || '' }}</td>
+        <td>{{ turno.especialidad }}</td>
+        <td>{{ turno.fecha | formatoFecha:'customDiaMesAnioDia' }}</td>
+        <td>{{ turno.fecha | date:'HH:mm' }}</td>
+        <td>
+          <span class="estado-{{ turno.estado }}">
+            <ng-container [ngSwitch]="turno.estado">
+              <span *ngSwitchCase="'pendiente'">Pendiente</span>
+              <span *ngSwitchCase="'confirmado'">Confirmado</span>
+              <span *ngSwitchCase="'aceptado'">Aceptado</span>
+              <span *ngSwitchCase="'realizado'">Realizado</span>
+              <span *ngSwitchCase="'rechazado'">Rechazado</span>
+              <span *ngSwitchCase="'cancelado'">Cancelado</span>
+              <span *ngSwitchDefault>{{ turno.estado | titlecase }}</span>
+            </ng-container>
+          </span>
+        </td>
+        <td>
+          <!-- ADMIN: Solo puede cancelar turnos y ver motivos -->
+          <span *ngIf="puedeCancelar(turno)">
+            <button class="btn-cancelar" (click)="abrirModalCancelar(turno)">Cancelar</button>
+          </span>
+          <span *ngIf="turno.estado === 'cancelado' && turno.comentariopaciente">
+            <button class="btn-ver" (click)="abrirModalMotivo(turno)">Ver Motivo</button>
+          </span>
+          <span *ngIf="turno.estado === 'rechazado' && turno.comentarioespecialista">
+            <button class="btn-ver" (click)="abrirModalMotivo(turno)">Ver Motivo</button>
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-  <div *ngIf="turnosFiltrados.length === 0" class="sin-turnos">No hay turnos para mostrar.</div>
-
-  <div class="turnos-lista">
-    <div *ngFor="let turno of turnosFiltrados" class="turno-item">
-      <div class="turno-info">
-        <div><strong>Especialidad:</strong> {{ turno.especialidad }}</div>
-        <div><strong>Especialista:</strong> {{ turno.especialistaNombre }}</div>
-        <div><strong>Paciente:</strong> {{ turno.pacienteNombre }}</div>
-        <div><strong>Fecha:</strong> {{ turno.fecha | date:'short' }}</div>
-        <div><strong>Estado:</strong> <span class="estado estado-{{ turno.estado }}">{{ estadoTurno(turno) }}</span></div>
+  <!-- Modal cancelar turno -->
+  <div class="modal-cancelar" *ngIf="mostrarModalCancelar">
+    <div class="modal-content">
+      <h3>Cancelar turno</h3>
+      <p>Por favor, ingresa el motivo de la cancelación:</p>
+      <textarea [(ngModel)]="motivoOperacion" rows="3" placeholder="Motivo..." class="textarea-motivo"></textarea>
+      <div *ngIf="errorMotivo" class="error-motivo">{{ errorMotivo }}</div>
+      <div class="modal-actions">
+        <button (click)="confirmarCancelacion()" class="btn-cancelar-modal">Confirmar</button>
+        <button (click)="cerrarModalCancelar()" class="btn-cerrar-modal">Cerrar</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Acciones -->
-      <div class="turno-acciones">
-        <!-- Cancelar turno -->
-        <button *ngIf="puedeCancelar(turno)" (click)="mostrarDialogoCancelacion(turno.id)">Cancelar</button>
-      </div>
-
-      <!-- Diálogo cancelar turno -->
-      <div *ngIf="mostrarComentarioCancelacion === turno.id" class="dialogo">
-        <label>¿Por qué cancelas el turno?</label>
-        <textarea [(ngModel)]="comentarioCancelacion" rows="2"></textarea>
-        <button (click)="cancelarTurno(turno)">Confirmar Cancelación</button>
-        <button (click)="mostrarComentarioCancelacion = null">Cerrar</button>
+  <!-- Modal ver motivo -->
+  <div class="modal-cancelar" *ngIf="mostrarModalMotivo">
+    <div class="modal-content">
+      <h3>Motivo de {{ turnoAOperar?.estado | titlecase }}</h3>
+      <p class="resena-texto">{{ motivoAMostrar }}</p>
+      <div class="modal-actions">
+        <button (click)="cerrarModalMotivo()" class="btn-cerrar-modal">Cerrar</button>
       </div>
     </div>
   </div>

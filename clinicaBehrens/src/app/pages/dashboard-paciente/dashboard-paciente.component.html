@@ -1,0 +1,122 @@
+<div class="dashboard-container" *ngIf="!isLoading">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-info">
+      <h1>Bienvenido/a, {{ paciente?.nombre }} {{ paciente?.apellido }}</h1>
+      <p class="obra-social">Obra Social: {{ paciente?.obra_social || 'Sin obra social' }}</p>
+    </div>
+    <div class="header-avatar" *ngIf="paciente?.imagen_perfil">
+      <img [src]="paciente.imagen_perfil" [alt]="paciente.nombre">
+    </div>
+  </div>
+
+  <!-- Próximo Turno Destacado -->
+  <div class="proximo-turno-destacado" *ngIf="estadisticas.proximoTurno">
+    <div class="turno-destacado-header">
+      <h2>🗓️ Tu Próximo Turno</h2>
+    </div>
+    <div class="turno-destacado-content">
+      <div class="turno-fecha-grande">
+        <p class="fecha">{{ formatearFecha(estadisticas.proximoTurno.fecha) }}</p>
+      </div>
+      <div class="turno-detalles">
+        <p><strong>Especialista:</strong> {{ estadisticas.proximoTurno.especialistaNombre }}</p>
+        <p><strong>Especialidad:</strong> {{ estadisticas.proximoTurno.especialidad }}</p>
+        <span [class]="getEstadoClass(estadisticas.proximoTurno.estado)" class="estado-badge">
+          {{ getEstadoTexto(estadisticas.proximoTurno.estado) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="estadisticas-grid">
+    <div class="stat-card pendientes">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.turnosPendientes }}</h3>
+        <p>Turnos Activos</p>
+      </div>
+    </div>
+
+    <div class="stat-card realizados">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.turnosRealizados }}</h3>
+        <p>Turnos Realizados</p>
+      </div>
+    </div>
+
+    <div class="stat-card cancelados">
+      <div class="stat-icon">❌</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.turnosCancelados }}</h3>
+        <p>Turnos Cancelados</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones Rápidas -->
+  <div class="acciones-rapidas">
+    <h2>¿Qué deseas hacer?</h2>
+    <div class="acciones-grid">
+      <button class="accion-card primary" (click)="irASolicitarTurno()">
+        <div class="accion-icon">📅</div>
+        <h3>Solicitar Turno</h3>
+        <p>Agenda una nueva consulta médica</p>
+      </button>
+
+      <button class="accion-card" (click)="irAMisTurnos()">
+        <div class="accion-icon">📋</div>
+        <h3>Mis Turnos</h3>
+        <p>Gestiona tus turnos pendientes y pasados</p>
+      </button>
+
+      <button class="accion-card" (click)="irAMiPerfil()">
+        <div class="accion-icon">👤</div>
+        <h3>Mi Perfil</h3>
+        <p>Ver historia clínica y datos personales</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de Próximos Turnos -->
+  <div class="lista-turnos" *ngIf="proximosTurnos.length > 0">
+    <h2>Todos tus Turnos Activos</h2>
+    <div class="turnos-list">
+      <div class="turno-item" *ngFor="let turno of proximosTurnos">
+        <div class="turno-fecha">
+          <div class="fecha-icon">📅</div>
+          <p>{{ formatearFecha(turno.fecha) }}</p>
+        </div>
+        <div class="turno-info">
+          <h3>{{ turno.especialidad }}</h3>
+          <p>Dr./Dra. {{ turno.especialistanombre }}</p>
+        </div>
+        <span [class]="getEstadoClass(turno.estado)" class="estado-badge">
+          {{ getEstadoTexto(turno.estado) }}
+        </span>
+      </div>
+    </div>
+    <button class="btn-ver-todos" (click)="irAMisTurnos()">
+      Ver Todos los Turnos →
+    </button>
+  </div>
+
+  <!-- Sin Turnos -->
+  <div class="sin-turnos" *ngIf="proximosTurnos.length === 0 && !estadisticas.proximoTurno">
+    <div class="sin-turnos-icon">📭</div>
+    <h3>No tienes turnos programados</h3>
+    <p>Solicita tu primera consulta médica</p>
+    <button class="btn-solicitar" (click)="irASolicitarTurno()">
+      Solicitar Turno
+    </button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Cargando dashboard...</p>
+</div>
+

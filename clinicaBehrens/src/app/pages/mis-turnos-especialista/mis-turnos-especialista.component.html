@@ -1,65 +1,169 @@
-<div class="mis-turnos-especialista">
-  <h2>Mis Turnos (Especialista)</h2>
+<div class="mis-turnos-container">
+  <h2>Turnos Asignados</h2>
+  
+  <div *ngIf="mensaje" class="mensaje-exito-turno">
+    {{ mensaje }}
+  </div>
+  
+  <input 
+    type="text" 
+    [(ngModel)]="filtro" 
+    (input)="filtrarTurnos()" 
+    placeholder="🔎 Buscar por especialidad o paciente..." 
+    class="filtro-input" />
 
-  <!-- Filtro único -->
-  <div class="filtro-turnos">
-    <label>Filtrar por:</label>
-    <button [class.active]="filtroTipo === 'especialidad'" (click)="setFiltroTipo('especialidad')">Especialidad</button>
-    <button [class.active]="filtroTipo === 'paciente'" (click)="setFiltroTipo('paciente')">Paciente</button>
-    <input type="text" [(ngModel)]="filtro" (input)="filtrarTurnos()" placeholder="Buscar..." />
+  <div *ngIf="turnosFiltrados.length === 0" class="mensaje-vacio">
+    <span>🙁 No tienes turnos asignados.</span>
   </div>
 
-  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+  <table *ngIf="turnosFiltrados.length > 0" class="tabla-turnos">
+    <thead>
+      <tr>
+        <th>Especialidad</th>
+        <th>Paciente</th>
+        <th>Fecha</th>
+        <th>Horario</th>
+        <th>Estado</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let turno of turnosFiltrados">
+        <td>{{ turno.especialidad }}</td>
+        <td>{{ turno.pacientenombre || '' }}</td>
+        <td>{{ turno.fecha | formatoFecha:'customDiaMesAnioDia' }}</td>
+        <td>{{ turno.fecha | date:'HH:mm' }}</td>
+        <td>
+          <span class="estado-{{ turno.estado }}">
+            <ng-container [ngSwitch]="turno.estado">
+              <span *ngSwitchCase="'pendiente'">Pendiente</span>
+              <span *ngSwitchCase="'confirmado'">Confirmado</span>
+              <span *ngSwitchCase="'aceptado'">Aceptado</span>
+              <span *ngSwitchCase="'realizado'">Realizado</span>
+              <span *ngSwitchCase="'rechazado'">Rechazado</span>
+              <span *ngSwitchCase="'cancelado'">Cancelado</span>
+              <span *ngSwitchDefault>{{ turno.estado | titlecase }}</span>
+            </ng-container>
+          </span>
+        </td>
+        <td>
+          <!-- ESPECIALISTA: Aceptar, Rechazar, Cancelar, Finalizar, Ver Reseña, Ver Encuesta -->
+          <span *ngIf="turno.estado === 'pendiente'">
+            <button class="btn-aceptar" (click)="aceptarTurno(turno)">Aceptar</button>
+            <button class="btn-rechazar" (click)="abrirModalRechazar(turno)">Rechazar</button>
+          </span>
+          <span *ngIf="turno.estado === 'aceptado'">
+            <button class="btn-cancelar" (click)="abrirModalCancelar(turno)">Cancelar</button>
+            <button class="btn-finalizar" (click)="abrirModalFinalizar(turno)">Finalizar</button>
+          </span>
+          <span *ngIf="puedeCancelar(turno) && turno.estado !== 'aceptado' && turno.estado !== 'pendiente'">
+            <button class="btn-cancelar" (click)="abrirModalCancelar(turno)">Cancelar</button>
+          </span>
+          <span *ngIf="puedeVerResena(turno)">
+            <button class="btn-ver" (click)="abrirModalResena(turno)">Ver Reseña</button>
+          </span>
+          <span *ngIf="turno.encuestacompletada">
+            <button class="btn-ver" (click)="abrirModalVerEncuesta(turno)">Ver Encuesta</button>
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-  <div *ngIf="turnosFiltrados.length === 0" class="sin-turnos">No tienes turnos para mostrar.</div>
-
-  <div class="turnos-lista">
-    <div *ngFor="let turno of turnosFiltrados" class="turno-item">
-      <div class="turno-info">
-        <div><strong>Especialidad:</strong> {{ turno.especialidad }}</div>
-        <div><strong>Paciente:</strong> {{ turno.pacienteNombre }}</div>
-        <div><strong>Fecha:</strong> {{ turno.fecha | date:'short' }}</div>
-        <div><strong>Estado:</strong> <span class="estado estado-{{ turno.estado }}">{{ estadoTurno(turno) }}</span></div>
+  <!-- Modal cancelar turno -->
+  <div class="modal-cancelar" *ngIf="mostrarModalCancelar">
+    <div class="modal-content">
+      <h3>Cancelar turno</h3>
+      <p>Por favor, ingresa el motivo de la cancelación:</p>
+      <textarea [(ngModel)]="motivoOperacion" rows="3" placeholder="Motivo..." class="textarea-motivo"></textarea>
+      <div *ngIf="errorMotivo" class="error-motivo">{{ errorMotivo }}</div>
+      <div class="modal-actions">
+        <button (click)="confirmarCancelacion()" class="btn-cancelar-modal">Confirmar</button>
+        <button (click)="cerrarModalCancelar()" class="btn-cerrar-modal">Cerrar</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Acciones -->
-      <div class="turno-acciones">
-        <!-- Cancelar turno -->
-        <button *ngIf="puedeCancelar(turno)" (click)="mostrarDialogoCancelacion(turno.id)">Cancelar</button>
-        <!-- Rechazar turno -->
-        <button *ngIf="puedeRechazar(turno)" (click)="mostrarDialogoRechazo(turno.id)">Rechazar</button>
-        <!-- Aceptar turno -->
-        <button *ngIf="puedeAceptar(turno)" (click)="aceptarTurno(turno)">Aceptar</button>
-        <!-- Finalizar turno -->
-        <button *ngIf="puedeFinalizar(turno)" (click)="mostrarDialogoFinalizar(turno.id)">Finalizar</button>
-        <!-- Crear Historia Clínica -->
-        <button *ngIf="puedeCrearHistoriaClinica(turno)" (click)="crearHistoriaClinica(turno.id)" class="btn-historia-clinica">Crear Historia Clínica</button>
-        <!-- Ver reseña -->
-        <button *ngIf="puedeVerResena(turno)" (click)="mensaje = turno.resena || ''">Ver Reseña</button>
+  <!-- Modal rechazar turno -->
+  <div class="modal-cancelar" *ngIf="mostrarModalRechazar">
+    <div class="modal-content">
+      <h3>Rechazar turno</h3>
+      <p>Por favor, ingresa el motivo del rechazo:</p>
+      <textarea [(ngModel)]="motivoOperacion" rows="3" placeholder="Motivo..." class="textarea-motivo"></textarea>
+      <div *ngIf="errorMotivo" class="error-motivo">{{ errorMotivo }}</div>
+      <div class="modal-actions">
+        <button (click)="confirmarRechazo()" class="btn-cancelar-modal">Confirmar</button>
+        <button (click)="cerrarModalRechazar()" class="btn-cerrar-modal">Cerrar</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Diálogo cancelar turno -->
-      <div *ngIf="mostrarComentarioCancelacion === turno.id" class="dialogo">
-        <label>¿Por qué cancelas el turno?</label>
-        <textarea [(ngModel)]="comentarioCancelacion" rows="2"></textarea>
-        <button (click)="cancelarTurno(turno)">Confirmar Cancelación</button>
-        <button (click)="mostrarComentarioCancelacion = null">Cerrar</button>
+  <!-- Modal finalizar turno -->
+  <div class="modal-cancelar" *ngIf="mostrarModalFinalizar">
+    <div class="modal-content">
+      <h3>Finalizar turno</h3>
+      <form (ngSubmit)="confirmarFinalizacion()" autocomplete="off">
+        <div class="historia-clinica-section">
+          <h4>Historia Clínica</h4>
+          <div class="datos-fijos">
+            <label>Altura (cm): <input type="number" [(ngModel)]="altura" name="altura" required min="0" /></label>
+            <label>Peso (kg): <input type="number" [(ngModel)]="peso" name="peso" required min="0" /></label>
+            <label>Temperatura (°C): <input type="number" [(ngModel)]="temperatura" name="temperatura" required min="0" step="0.1" /></label>
+            <label>Presión: <input type="text" [(ngModel)]="presion" name="presion" required /></label>
+          </div>
+          <div class="datos-dinamicos">
+            <label>Dato:</label>
+            <input type="text" [(ngModel)]="claveDinamica" name="claveDinamica" maxlength="20" />
+            <input type="text" [(ngModel)]="valorDinamico" name="valorDinamico" maxlength="30"/>
+            <button type="button" (click)="agregarDatoDinamico()" [disabled]="datosDinamicos.length >= 3">Agregar</button>
+          </div>
+          <div class="chips-dinamicos">
+            <span class="chip-dinamico" *ngFor="let dato of datosDinamicos; let i = index">
+              {{dato.clave}}: {{dato.valor}}
+              <button type="button" (click)="eliminarDatoDinamico(i)">x</button>
+            </span>
+          </div>
+        </div>
+        <p>Por favor, ingresa una reseña o comentario de la consulta:</p>
+        <textarea [(ngModel)]="resenaFinal" name="resenaFinal" rows="3" placeholder="Comentario o diagnóstico..." class="textarea-motivo" required></textarea>
+        <div *ngIf="errorMotivo" class="error-motivo">{{ errorMotivo }}</div>
+        <div *ngIf="errorHistoriaClinica" class="error-motivo">{{ errorHistoriaClinica }}</div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-finalizar-modal">Finalizar</button>
+          <button type="button" (click)="cerrarModalFinalizar()" class="btn-cerrar-modal">Cerrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal ver reseña -->
+  <div class="modal-cancelar" *ngIf="mostrarModalResena">
+    <div class="modal-content">
+      <h3>Reseña del turno</h3>
+      <p class="resena-texto">{{ resenaAMostrar }}</p>
+      <div class="modal-actions">
+        <button (click)="cerrarModalResena()" class="btn-cerrar-modal">Cerrar</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Diálogo rechazar turno -->
-      <div *ngIf="mostrarComentarioRechazo === turno.id" class="dialogo">
-        <label>¿Por qué rechazas el turno?</label>
-        <textarea [(ngModel)]="comentarioRechazo" rows="2"></textarea>
-        <button (click)="rechazarTurno(turno)">Confirmar Rechazo</button>
-        <button (click)="mostrarComentarioRechazo = null">Cerrar</button>
+  <!-- Modal ver encuesta (del paciente) -->
+  <div class="modal-cancelar" *ngIf="mostrarModalVerEncuesta">
+    <div class="modal-content">
+      <h3>Encuesta del paciente</h3>
+      <div class="ver-encuesta-contenido">
+        <div class="ver-encuesta-estrellas">
+          <ng-container *ngFor="let star of [1,2,3,4,5]">
+            <span class="estrella" [class.selected]="star <= encuestaEstrellasVer">★</span>
+          </ng-container>
+        </div>
+        <div class="ver-encuesta-comentario">
+          <strong>Comentario:</strong>
+          <p>{{ encuestaComentarioVer }}</p>
+        </div>
       </div>
-
-      <!-- Diálogo finalizar turno -->
-      <div *ngIf="mostrarFinalizar === turno.id" class="dialogo">
-        <label>Reseña / Diagnóstico:</label>
-        <textarea [(ngModel)]="comentarioFinalizar" rows="3" placeholder="Describe la consulta y diagnóstico"></textarea>
-        <button (click)="finalizarTurno(turno)">Finalizar Turno</button>
-        <button (click)="mostrarFinalizar = null">Cerrar</button>
+      <div class="modal-actions">
+        <button (click)="cerrarModalVerEncuesta()" class="btn-cerrar-modal">Cerrar</button>
       </div>
     </div>
   </div>

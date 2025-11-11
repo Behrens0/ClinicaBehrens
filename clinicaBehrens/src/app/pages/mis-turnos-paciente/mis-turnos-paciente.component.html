@@ -1,57 +1,153 @@
-<div class="mis-turnos-paciente">
-  <h2>Mis Turnos</h2>
+<div class="mis-turnos-container">
+  <h2>🗓️ Mis Turnos</h2>
+  
+  <div *ngIf="mensaje" class="mensaje-exito-turno">
+    {{ mensaje }}
+  </div>
+  
+  <input 
+    type="text" 
+    [(ngModel)]="filtro" 
+    (input)="filtrarTurnos()" 
+    placeholder="🔎 Buscar por especialidad o especialista..." 
+    class="filtro-input" />
 
-  <!-- Filtro único -->
-  <div class="filtro-turnos">
-    <label>Filtrar por:</label>
-    <button [class.active]="filtroTipo === 'especialidad'" (click)="setFiltroTipo('especialidad')">Especialidad</button>
-    <button [class.active]="filtroTipo === 'especialista'" (click)="setFiltroTipo('especialista')">Especialista</button>
-    <input type="text" [(ngModel)]="filtro" (input)="filtrarTurnos()" placeholder="Buscar..." />
+  <div *ngIf="turnosFiltrados.length === 0" class="mensaje-vacio">
+    <span>🙁 No tienes turnos para mostrar.</span>
   </div>
 
-  <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
+  <table *ngIf="turnosFiltrados.length > 0" class="tabla-turnos">
+    <thead>
+      <tr>
+        <th>Especialidad</th>
+        <th>Especialista</th>
+        <th>Fecha</th>
+        <th>Horario</th>
+        <th>Estado</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let turno of turnosFiltrados">
+        <td>{{ turno.especialidad }}</td>
+        <td>{{ turno.especialistanombre }}</td>
+        <td>{{ turno.fecha | formatoFecha:'customDiaMesAnioDia' }}</td>
+        <td>{{ turno.fecha | date:'HH:mm' }}</td>
+        <td>
+          <span class="estado-{{ turno.estado }}">
+            <ng-container [ngSwitch]="turno.estado">
+              <span *ngSwitchCase="'pendiente'">Pendiente</span>
+              <span *ngSwitchCase="'confirmado'">Confirmado</span>
+              <span *ngSwitchCase="'aceptado'">Aceptado</span>
+              <span *ngSwitchCase="'realizado'">Realizado</span>
+              <span *ngSwitchCase="'rechazado'">Rechazado</span>
+              <span *ngSwitchCase="'cancelado'">Cancelado</span>
+              <span *ngSwitchDefault>{{ turno.estado | titlecase }}</span>
+            </ng-container>
+          </span>
+        </td>
+        <td>
+          <!-- PACIENTE: Cancelar, Ver Reseña, Encuesta, Calificar -->
+          <span *ngIf="puedeCancelar(turno)">
+            <button class="btn-cancelar" (click)="abrirModalCancelar(turno)">Cancelar</button>
+          </span>
+          <span *ngIf="puedeVerResena(turno)">
+            <button class="btn-ver" (click)="abrirModalResena(turno)">Ver Reseña</button>
+          </span>
+          <span *ngIf="puedeCompletarEncuesta(turno)">
+            <button class="btn-encuesta" (click)="abrirModalEncuesta(turno)">Completar Encuesta</button>
+          </span>
+          <span *ngIf="puedeCalificar(turno)">
+            <button class="btn-calificar" (click)="abrirModalCalificar(turno)">Calificar Atención</button>
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-  <div *ngIf="turnosFiltrados.length === 0" class="sin-turnos">No tienes turnos para mostrar.</div>
-
-  <div class="turnos-lista">
-    <div *ngFor="let turno of turnosFiltrados" class="turno-item" @turnoAnim>
-      <div class="turno-info">
-        <div><strong>Especialidad:</strong> {{ turno.especialidad }}</div>
-        <div><strong>Especialista:</strong> {{ turno.especialistaNombre }}</div>
-        <div><strong>Fecha:</strong> {{ turno.fecha | date:'short' }}</div>
-        <div><strong>Estado:</strong> <span class="estado estado-{{ turno.estado }}">{{ estadoTurno(turno) }}</span></div>
+  <!-- Modal cancelar turno -->
+  <div class="modal-cancelar" *ngIf="mostrarModalCancelar">
+    <div class="modal-content">
+      <h3>Cancelar turno</h3>
+      <p>Por favor, ingresa el motivo de la cancelación:</p>
+      <textarea [(ngModel)]="comentarioCancelacion" rows="3" placeholder="Motivo..." class="textarea-motivo"></textarea>
+      <div *ngIf="errorMotivo" class="error-motivo">{{ errorMotivo }}</div>
+      <div class="modal-actions">
+        <button (click)="confirmarCancelacion()" class="btn-cancelar-modal">Confirmar</button>
+        <button (click)="cerrarModalCancelar()" class="btn-cerrar-modal">Cerrar</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Acciones -->
-      <div class="turno-acciones">
-        <!-- Cancelar turno -->
-        <button *ngIf="puedeCancelar(turno)" (click)="mostrarDialogoCancelacion(turno.id)">Cancelar</button>
-        <!-- Ver reseña -->
-        <button *ngIf="puedeVerResena(turno)" (click)="mensaje = turno.resena || ''">Ver Reseña</button>
-        <!-- Completar encuesta -->
-        <button *ngIf="puedeCompletarEncuesta(turno)" (click)="completarEncuesta(turno)">Completar Encuesta</button>
-        <!-- Calificar atención -->
-        <button *ngIf="puedeCalificar(turno)" (click)="mostrarDialogoCalificacion(turno.id)">Calificar Atención</button>
+  <!-- Modal ver reseña -->
+  <div class="modal-cancelar" *ngIf="mostrarModalResena">
+    <div class="modal-content">
+      <h3>Reseña del turno</h3>
+      <p class="resena-texto">{{ resenaAMostrar }}</p>
+      <div class="modal-actions">
+        <button (click)="cerrarModalResena()" class="btn-cerrar-modal">Cerrar</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Diálogo cancelar turno -->
-      <div *ngIf="mostrarComentarioCancelacion === turno.id" class="dialogo">
-        <label>¿Por qué cancelas el turno?</label>
-        <textarea [(ngModel)]="comentarioCancelacion" rows="2"></textarea>
-        <button (click)="cancelarTurno(turno)">Confirmar Cancelación</button>
-        <button (click)="mostrarComentarioCancelacion = null">Cerrar</button>
-      </div>
+  <!-- Modal encuesta -->
+  <div class="modal-cancelar" *ngIf="mostrarModalEncuesta">
+    <div class="modal-content">
+      <h3>Encuesta sobre la atención</h3>
+      <form (ngSubmit)="confirmarEncuesta()" autocomplete="off">
+        <label for="comentarioEncuesta">Comentario para el médico:</label>
+        <textarea 
+          id="comentarioEncuesta" 
+          [(ngModel)]="comentarioEncuesta" 
+          name="comentarioEncuesta" 
+          rows="3" 
+          placeholder="Escribe tu comentario..." 
+          class="textarea-motivo" 
+          required>
+        </textarea>
+        <div class="estrellas-encuesta">
+          <label>Calificación:</label>
+          <ng-container *ngFor="let star of [1,2,3,4,5]">
+            <span 
+              (click)="estrellasEncuesta = star" 
+              [class.selected]="estrellasEncuesta >= star" 
+              class="estrella">★</span>
+          </ng-container>
+        </div>
+        <div *ngIf="errorEncuesta" class="error-motivo">{{ errorEncuesta }}</div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-finalizar-modal">Enviar</button>
+          <button type="button" (click)="cerrarModalEncuesta()" class="btn-cerrar-modal">Cerrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-      <!-- Diálogo calificar atención -->
-      <div *ngIf="mostrarCalificacion === turno.id" class="dialogo">
-        <label>Califica la atención del especialista:</label>
-        <select [(ngModel)]="calificacionPuntaje">
+  <!-- Modal calificar atención -->
+  <div class="modal-cancelar" *ngIf="mostrarModalCalificar">
+    <div class="modal-content">
+      <h3>Calificar Atención</h3>
+      <form (ngSubmit)="confirmarCalificacion()" autocomplete="off">
+        <label for="puntajeAtencion">Puntaje (1-5):</label>
+        <select id="puntajeAtencion" [(ngModel)]="calificacionPuntaje" name="puntaje" required>
           <option *ngFor="let n of [1,2,3,4,5]" [value]="n">{{ n }} ⭐</option>
         </select>
-        <textarea [(ngModel)]="calificacionComentario" placeholder="Comentario"></textarea>
-        <button (click)="calificarAtencion(turno)">Enviar Calificación</button>
-        <button (click)="mostrarCalificacion = null">Cerrar</button>
-      </div>
+        <label for="comentarioAtencion">Comentario sobre la atención:</label>
+        <textarea 
+          id="comentarioAtencion" 
+          [(ngModel)]="calificacionComentario" 
+          name="comentario" 
+          rows="3" 
+          placeholder="¿Cómo fue la atención del especialista?..." 
+          class="textarea-motivo" 
+          required>
+        </textarea>
+        <div *ngIf="errorMotivo" class="error-motivo">{{ errorMotivo }}</div>
+        <div class="modal-actions">
+          <button type="submit" class="btn-finalizar-modal">Enviar Calificación</button>
+          <button type="button" (click)="cerrarModalCalificar()" class="btn-cerrar-modal">Cerrar</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

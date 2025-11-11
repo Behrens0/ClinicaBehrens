@@ -2,18 +2,42 @@
   <h1>Dashboard Administrador</h1>
   <p>Bienvenido al dashboard de administradores</p>
   
+  <!-- Accesos Rápidos -->
+  <div class="quick-access">
+    <h2>Accesos Rápidos</h2>
+    <div class="quick-access-grid">
+      <button routerLink="/mis-turnos-administrador" class="quick-btn">
+        <span class="icon">📋</span>
+        <span class="text">Todos los Turnos</span>
+      </button>
+      <button routerLink="/turnos" class="quick-btn">
+        <span class="icon">📅</span>
+        <span class="text">Solicitar Turno</span>
+      </button>
+      <button routerLink="/registro" class="quick-btn">
+        <span class="icon">➕</span>
+        <span class="text">Registrar Usuario</span>
+      </button>
+      <button routerLink="/historias-clinicas-admin" class="quick-btn">
+        <span class="icon">📄</span>
+        <span class="text">Historias Clínicas</span>
+      </button>
+      <button routerLink="/mi-perfil" class="quick-btn">
+        <span class="icon">👤</span>
+        <span class="text">Mi Perfil</span>
+      </button>
+    </div>
+  </div>
+
   <div class="admin-actions">
-    <button routerLink="/registro" class="btn-registrar">
-      <i class="fas fa-user-plus"></i>
-      Registrar Usuario
-    </button>
-    
     <div class="action-description">
-      <p>Desde aquí puedes registrar nuevos:</p>
+      <p>Desde aquí puedes:</p>
       <ul>
-        <li>Pacientes</li>
-        <li>Especialistas</li>
-        <li>Administradores</li>
+        <li>Ver y gestionar todos los turnos de la clínica</li>
+        <li>Solicitar turnos para pacientes</li>
+        <li>Registrar nuevos pacientes, especialistas y administradores</li>
+        <li>Aprobar o rechazar especialistas pendientes</li>
+        <li>Habilitar o inhabilitar acceso de especialistas</li>
       </ul>
     </div>
   </div>
@@ -52,7 +76,12 @@
 
   <!-- Listado de Usuarios -->
   <div class="section-usuarios">
-    <h2>Usuarios del Sistema</h2>
+    <div class="usuarios-header">
+      <h2>Usuarios del Sistema</h2>
+      <button (click)="descargarExcelUsuarios()" class="btn-excel">
+        📊 Descargar Excel
+      </button>
+    </div>
     <div class="usuarios-stats">
       <div class="stat-card">
         <h3>{{ getUsuariosPorTipo('paciente').length }}</h3>
@@ -81,6 +110,7 @@
             <th>Especialidad</th>
             <th>Obra Social</th>
             <th>Estado</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -111,6 +141,32 @@
                     [class]="getEstadoEspecialista(usuario)">
                 {{ getEstadoEspecialistaTexto(usuario) }}
               </span>
+              <span *ngIf="usuario.tipo !== 'especialista'">-</span>
+            </td>
+            <td>
+              <div class="action-buttons" *ngIf="usuario.tipo === 'especialista'">
+                <button 
+                  *ngIf="usuario.aprobado && !usuario.rechazado"
+                  (click)="inhabilitarEspecialista(usuario)" 
+                  class="btn-inhabilitar"
+                  title="Inhabilitar acceso al sistema">
+                  🚫 Inhabilitar
+                </button>
+                <button 
+                  *ngIf="!usuario.aprobado && !usuario.rechazado"
+                  (click)="habilitarEspecialista(usuario)" 
+                  class="btn-habilitar"
+                  title="Habilitar acceso al sistema">
+                  ✅ Habilitar
+                </button>
+                <button 
+                  *ngIf="usuario.rechazado"
+                  (click)="habilitarEspecialista(usuario)" 
+                  class="btn-habilitar"
+                  title="Reactivar especialista">
+                  ♻️ Reactivar
+                </button>
+              </div>
               <span *ngIf="usuario.tipo !== 'especialista'">-</span>
             </td>
           </tr>

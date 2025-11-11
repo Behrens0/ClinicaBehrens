@@ -105,7 +105,7 @@ export class MiPerfilComponent implements OnInit {
   descargarHistoriaClinica() {
     const doc = new jsPDF();
     // Logo (ajustar tamaño y posición según necesidad)
-    const logoUrl = 'https://nxzgjzkqlpodsyhaukna.supabase.co/storage/v1/object/public/clinica//clinica-logo2.jpg';
+    const logoUrl = 'https://sxdosrgvnxbxifxvasks.supabase.co/storage/v1/object/public/clinica/clinica-logo2.jpg';
     // Cargar imagen asíncrona
     const img = new Image();
     img.crossOrigin = 'Anonymous';

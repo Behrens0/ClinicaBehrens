@@ -37,18 +37,44 @@ export class TurnosComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const session = await this.registroService.getSesionActual();
-    const userId = session?.data?.session?.user?.id || '';
-    if (userId) {
-      this.perfil = await this.registroService.getPerfilPorUserId(userId);
-      this.esAdmin = this.perfil?.tipo === 'administrador';
-      if (this.esAdmin) {
-        // Cargar todos los pacientes
-        this.pacientes = await this.registroService.getPacientes();
+    try {
+      console.log('=== INICIANDO CARGA DE TURNOS ===');
+      const session = await this.registroService.getSesionActual();
+      console.log('Sesión:', session);
+      
+      const userId = session?.data?.session?.user?.id || '';
+      console.log('User ID:', userId);
+      
+      if (userId) {
+        this.perfil = await this.registroService.getPerfilPorUserId(userId);
+        console.log('Perfil:', this.perfil);
+        
+        this.esAdmin = this.perfil?.tipo === 'administrador';
+        console.log('Es admin:', this.esAdmin);
+        
+        if (this.esAdmin) {
+          // Cargar todos los pacientes
+          console.log('Cargando pacientes...');
+          this.pacientes = await this.registroService.getPacientes();
+          console.log('Pacientes cargados:', this.pacientes.length);
+        }
+        
+        // Cargar todas las especialidades y especialistas
+        console.log('Cargando especialidades...');
+        this.especialidades = await this.registroService.getTodasEspecialidades();
+        console.log('Especialidades:', this.especialidades);
+        
+        console.log('Cargando especialistas...');
+        this.especialistas = await this.registroService.getEspecialistas();
+        console.log('Especialistas:', this.especialistas.length);
+      } else {
+        this.mensaje = '⚠️ No hay sesión activa. Por favor, inicia sesión.';
       }
-      // Cargar todas las especialidades y especialistas
-      this.especialidades = await this.registroService.getTodasEspecialidades();
-      this.especialistas = await this.registroService.getEspecialistas();
+      
+      console.log('=== CARGA COMPLETADA ===');
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+      this.mensaje = '❌ Error al cargar datos. Verifica la consola.';
     }
   }
 
@@ -112,38 +138,99 @@ export class TurnosComponent implements OnInit {
   }
 
   async solicitarTurno() {
+    console.log('🟢 [TurnosComponent] Iniciando solicitud de turno...');
+    
     if (!this.especialidadSeleccionada || !this.especialistaSeleccionado || !this.diaSeleccionado || !this.horarioSeleccionado) {
       this.mensaje = 'Completa todos los campos para solicitar el turno.';
+      console.warn('⚠️ Faltan campos por completar');
       return;
     }
+    
     let paciente = this.perfil;
     if (this.esAdmin) {
       if (!this.pacienteSeleccionado) {
         this.mensaje = 'Selecciona un paciente.';
+        console.warn('⚠️ Admin debe seleccionar un paciente');
         return;
       }
       paciente = this.pacienteSeleccionado;
     }
-    // Crear el turno
+    
+    console.log('📋 Datos del paciente:', {
+      user_id: paciente.user_id,
+      nombre: paciente.nombre,
+      apellido: paciente.apellido
+    });
+    
+    console.log('📋 Datos del especialista:', {
+      user_id: this.especialistaSeleccionado.user_id,
+      nombre: this.especialistaSeleccionado.nombre,
+      apellido: this.especialistaSeleccionado.apellido
+    });
+    
+    // Convertir fecha de formato dd/mm/yyyy a yyyy-mm-dd y agregar hora
+    const partesFecha = this.diaSeleccionado.split('/');
+    const fechaBase = `${partesFecha[2]}-${partesFecha[1].padStart(2, '0')}-${partesFecha[0].padStart(2, '0')}`;
+    
+    // Normalizar hora: si viene como HH:MM agregar :00, si viene como HH:MM:SS dejarlo así
+    let horaFormateada = this.horarioSeleccionado.hora_inicio;
+    if (horaFormateada.split(':').length === 2) {
+      horaFormateada = `${horaFormateada}:00`;
+    }
+    
+    const fechaConHora = `${fechaBase}T${horaFormateada}`;
+    
+    console.log('📅 Fecha procesada:', {
+      original: this.diaSeleccionado,
+      base: fechaBase,
+      horaOriginal: this.horarioSeleccionado.hora_inicio,
+      horaFormateada: horaFormateada,
+      conHora: fechaConHora
+    });
+    
+    // Crear el turno con nombres de columnas exactos de la BD
     const turno = {
-      pacienteId: paciente.user_id,
-      pacienteNombre: paciente.nombre + ' ' + paciente.apellido,
-      especialistaId: this.especialistaSeleccionado.user_id,
-      especialistaNombre: this.especialistaSeleccionado.nombre + ' ' + this.especialistaSeleccionado.apellido,
+      pacienteid: paciente.user_id,
+      pacientenombre: paciente.nombre + ' ' + paciente.apellido,
+      especialistaid: this.especialistaSeleccionado.user_id,
+      especialistanombre: this.especialistaSeleccionado.nombre + ' ' + this.especialistaSeleccionado.apellido,
       especialidad: this.especialidadSeleccionada,
-      fecha: this.diaSeleccionado + ' ' + this.horarioSeleccionado.hora_inicio,
+      fecha: fechaConHora,
       estado: 'pendiente'
     };
-    await this.turnosService.solicitarTurno(turno);
-    this.mensaje = 'Turno solicitado correctamente.';
-    // Limpiar selección
-    this.especialidadSeleccionada = '';
-    this.especialistaSeleccionado = null;
-    this.diasDisponibles = [];
-    this.horariosDisponibles = [];
-    this.diaSeleccionado = '';
-    this.horarioSeleccionado = null;
-    this.pacienteSeleccionado = null;
+    
+    console.log('📦 Objeto turno a insertar:', JSON.stringify(turno, null, 2));
+    
+    try {
+      console.log('⏳ Llamando al servicio...');
+      const resultado = await this.turnosService.solicitarTurno(turno);
+      console.log('✅ Resultado del servicio:', resultado);
+      
+      this.mensaje = '✅ Turno solicitado correctamente.';
+      
+      // Limpiar selección después de 2 segundos
+      setTimeout(() => {
+        this.especialidadSeleccionada = '';
+        this.especialistaSeleccionado = null;
+        this.diasDisponibles = [];
+        this.horariosDisponibles = [];
+        this.diaSeleccionado = '';
+        this.horarioSeleccionado = null;
+        this.pacienteSeleccionado = null;
+        this.especialistasFiltrados = [];
+        this.horariosFiltrados = [];
+        this.mensaje = '';
+      }, 2000);
+    } catch (error: any) {
+      console.error('❌ [TurnosComponent] Error al solicitar turno:', error);
+      console.error('❌ Detalles del error:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code
+      });
+      this.mensaje = '❌ Error al solicitar el turno: ' + (error?.message || 'Error desconocido');
+    }
   }
 
   limpiarMensaje() {

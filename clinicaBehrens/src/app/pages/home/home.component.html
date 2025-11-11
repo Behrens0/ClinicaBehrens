@@ -1,0 +1,65 @@
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
+<div class="home-container">
+  <header class="header">
+    <img src="https://sxdosrgvnxbxifxvasks.supabase.co/storage/v1/object/public/clinica/clinica-logo2.jpg" alt="Logo de la Clínica" class="logo" />
+    <div class="header-buttons">
+      <button class="btn-secondary" (click)="irALogin()">Iniciar Sesión</button>
+      <button class="btn-primary" (click)="irARegistro()">Registrarse</button>
+    </div>
+  </header>
+
+  <!-- Sección de bienvenida -->
+  <section class="welcome-section">
+    <h1>Bienvenido a la Clínica Behrens</h1>
+    <p>
+      Nos dedicamos a proporcionar servicios de salud de alta calidad con acceso fácil y rápido a médicos profesionales.
+    </p>
+    <div class="cta-buttons">
+      <button class="btn-large btn-primary" (click)="irARegistro()">Comienza Ahora</button>
+      <button class="btn-large btn-outline" (click)="irALogin()">Ya tengo cuenta</button>
+    </div>
+  </section>
+
+  <!-- Sección ¿Qué nos diferencia? -->
+  <section class="differentiators-section">
+    <h2>¿Qué nos diferencia?</h2>
+    <div class="cards-container">
+      <div class="card">
+        <div class="card-icon">👥</div>
+        <h3>Atención Personalizada</h3>
+        <p>Nos enfocamos en cada paciente con un trato especial y único, podrás gestionar tus turnos y tener tu ficha médica cuando quieras.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Acceso Inmediato</h3>
+        <p>Reserva tus consultas de forma rápida y desde cualquier dispositivo a cualquier hora, desde donde sea, con el profesional que desees.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏥</div>
+        <h3>Profesionales de Confianza</h3>
+        <p>Un equipo médico de alto nivel y con experiencia en el rubro te pueden dar la tranquilidad de que estás en el lugar indicado.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra informativa -->
+  <section class="info-bar">
+    <div class="info-item">
+      <p class="info-number">+15</p>
+      <h4>Años en el rubro</h4>
+    </div>
+    <div class="info-item">
+      <p class="info-number">+25.000</p>
+      <h4>Pacientes Atendidos</h4>
+    </div>
+    <div class="info-item">
+      <p class="info-number">+50</p>
+      <h4>Profesionales</h4>
+    </div>
+  </section>
+</div>
+
+<footer class="footer">
+  <p>&copy; 2025 Clínica Behrens. Todos los derechos reservados.</p>
+</footer>
+

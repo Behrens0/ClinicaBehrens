@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnosService } from '../../services/turnos.service';
@@ -7,11 +7,12 @@ import { RegistroService } from '../../services/registro.service';
 import { HistoriaClinica, DatoDinamico } from '../../models/historia-clinica.model';
 import { HistoriaClinicaService } from '../../services/historia-clinica.service';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { FormatoFechaPipe } from '../../pipes/formato-fecha.pipe';
 
 @Component({
   selector: 'app-mis-turnos-paciente',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FormatoFechaPipe],
   templateUrl: './mis-turnos-paciente.component.html',
   styleUrls: ['./mis-turnos-paciente.component.scss'],
   animations: [
@@ -27,125 +28,221 @@ export class MisTurnosPacienteComponent implements OnInit {
   turnos: (Turno & { historiaClinica?: HistoriaClinica })[] = [];
   turnosFiltrados: (Turno & { historiaClinica?: HistoriaClinica })[] = [];
   filtro: string = '';
-  filtroTipo: 'especialidad' | 'especialista' = 'especialidad';
   pacienteId: string = '';
-  mostrarComentarioCancelacion: string | null = null;
+  
+  // Modales
+  mostrarModalCancelar: boolean = false;
+  mostrarModalResena: boolean = false;
+  mostrarModalEncuesta: boolean = false;
+  mostrarModalCalificar: boolean = false;
+  
+  turnoAOperar: any = null;
   comentarioCancelacion: string = '';
-  mostrarCalificacion: string | null = null;
+  resenaAMostrar: string = '';
+  
+  // Encuesta
+  comentarioEncuesta: string = '';
+  estrellasEncuesta: number = 0;
+  
+  // Calificación
   calificacionPuntaje: number = 5;
   calificacionComentario: string = '';
+  
   mensaje: string = '';
+  errorMotivo: string = '';
+  errorEncuesta: string = '';
 
   constructor(
     private turnosService: TurnosService,
     private registroService: RegistroService,
-    private historiaClinicaService: HistoriaClinicaService
+    private historiaClinicaService: HistoriaClinicaService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
+    console.log('🔵 [MisTurnosPaciente] Iniciando carga...');
     const session = await this.registroService.getSesionActual();
     this.pacienteId = session?.data?.session?.user?.id || '';
+    console.log('👤 [MisTurnosPaciente] Paciente ID:', this.pacienteId);
+    
     if (this.pacienteId) {
       this.turnosService.getTurnosPorPaciente(this.pacienteId).subscribe(async turnos => {
-        // Buscar historia clínica asociada a cada turno
-        const turnosConHistoria = await Promise.all((turnos || []).map(async t => {
-          const historia = await this.historiaClinicaService.getHistoriasPorPaciente(this.pacienteId).toPromise();
-          const historiaDeTurno = (historia || []).find(h => h.historia.turno_id === t.id)?.historia;
-          return { ...t, historiaClinica: historiaDeTurno };
-        }));
-        this.turnos = turnosConHistoria;
-        this.turnosFiltrados = [...this.turnos];
+        console.log('📋 [MisTurnosPaciente] Turnos recibidos:', turnos);
+        console.log('📊 [MisTurnosPaciente] Cantidad de turnos:', turnos?.length || 0);
+        
+        try {
+          // Buscar historia clínica asociada a cada turno
+          const turnosConHistoria = await Promise.all((turnos || []).map(async t => {
+            try {
+              const historia = await this.historiaClinicaService.getHistoriasPorPaciente(this.pacienteId).toPromise();
+              const historiaDeTurno = (historia || []).find(h => h.historia.turno_id === t.id)?.historia;
+              return { ...t, historiaClinica: historiaDeTurno };
+            } catch (error) {
+              console.warn('⚠️ [MisTurnosPaciente] Error al obtener historia para turno:', t.id, error);
+              return { ...t, historiaClinica: undefined };
+            }
+          }));
+          
+          this.turnos = turnosConHistoria;
+          this.turnosFiltrados = [...this.turnos];
+          console.log('✅ [MisTurnosPaciente] Turnos procesados:', this.turnos.length);
+          console.log('📊 [MisTurnosPaciente] turnosFiltrados.length:', this.turnosFiltrados.length);
+          console.log('📋 [MisTurnosPaciente] turnosFiltrados:', this.turnosFiltrados);
+          
+          // Forzar detección de cambios
+          this.cdr.detectChanges();
+          console.log('🔄 [MisTurnosPaciente] Detección de cambios forzada');
+        } catch (error) {
+          console.error('❌ [MisTurnosPaciente] Error al procesar turnos:', error);
+          // Si falla, al menos mostrar los turnos sin historia clínica
+          this.turnos = (turnos || []).map(t => ({ ...t, historiaClinica: undefined }));
+          this.turnosFiltrados = [...this.turnos];
+          this.cdr.detectChanges();
+        }
       });
     }
   }
 
-  setFiltroTipo(tipo: 'especialidad' | 'especialista') {
-    this.filtroTipo = tipo;
-    this.filtro = '';
-    this.filtrarTurnos();
-  }
-
   filtrarTurnos() {
-    if (!this.filtro) {
+    if (!this.filtro.trim()) {
       this.turnosFiltrados = [...this.turnos];
       return;
     }
-    const filtroLower = this.filtro.toLowerCase();
+    const filtroLower = this.filtro.trim().toLowerCase();
     this.turnosFiltrados = this.turnos.filter(t => {
-      // Buscar en campos del turno
-      const camposTurno = [
-        t.especialidad,
-        t.especialistaNombre,
-        t.estado,
-        t.fecha,
-        t.comentarioPaciente || '',
-        t.comentarioEspecialista || '',
-        t.resena || '',
-        t.calificacionAtencion?.comentario || ''
-      ].join(' ').toLowerCase();
-      // Buscar en historia clínica (si existe)
-      let camposHistoria = '';
-      if (t.historiaClinica) {
-        camposHistoria = [
-          t.historiaClinica.altura,
-          t.historiaClinica.peso,
-          t.historiaClinica.temperatura,
-          t.historiaClinica.presion
-        ].join(' ').toLowerCase();
-        // Buscar en datos dinámicos
-        if (t.historiaClinica.datos_dinamicos) {
-          camposHistoria += ' ' + t.historiaClinica.datos_dinamicos.map((d: DatoDinamico) => `${d.clave} ${d.valor}`).join(' ').toLowerCase();
+      let texto = '';
+      // Buscar en todos los campos relevantes
+      for (const key in t) {
+        if (typeof (t as any)[key] === 'string' || typeof (t as any)[key] === 'number') {
+          texto += ' ' + (t as any)[key];
         }
       }
-      return camposTurno.includes(filtroLower) || camposHistoria.includes(filtroLower);
+      // Buscar en historia clínica
+      if (t.historiaClinica) {
+        texto += ' ' + (t.historiaClinica.altura || '');
+        texto += ' ' + (t.historiaClinica.peso || '');
+        texto += ' ' + (t.historiaClinica.temperatura || '');
+        texto += ' ' + (t.historiaClinica.presion || '');
+        if (Array.isArray(t.historiaClinica.datos_dinamicos)) {
+          t.historiaClinica.datos_dinamicos.forEach((dato: DatoDinamico) => {
+            texto += ' ' + (dato.clave || '') + ' ' + (dato.valor || '');
+          });
+        }
+      }
+      return texto.toLowerCase().includes(filtroLower);
     });
   }
 
-  // Acciones
-  mostrarDialogoCancelacion(turnoId: string) {
-    this.mostrarComentarioCancelacion = turnoId;
+  // Acciones - Cancelar
+  abrirModalCancelar(turno: any) {
+    this.turnoAOperar = turno;
     this.comentarioCancelacion = '';
+    this.errorMotivo = '';
+    this.mostrarModalCancelar = true;
   }
-
-  cancelarTurno(turno: Turno) {
+  
+  cerrarModalCancelar() {
+    this.mostrarModalCancelar = false;
+    this.turnoAOperar = null;
+    this.comentarioCancelacion = '';
+    this.errorMotivo = '';
+  }
+  
+  async confirmarCancelacion() {
     if (!this.comentarioCancelacion.trim()) {
-      this.mensaje = 'Debes dejar un comentario para cancelar el turno.';
+      this.errorMotivo = 'Debes ingresar un motivo para cancelar el turno.';
       return;
     }
-    this.turnosService.cancelarTurno(turno.id, this.comentarioCancelacion).then(() => {
-      this.mensaje = 'Turno cancelado correctamente.';
-      this.mostrarComentarioCancelacion = null;
-      this.comentarioCancelacion = '';
-      this.ngOnInit();
-    });
+    try {
+      await this.turnosService.cancelarTurno(this.turnoAOperar.id, this.comentarioCancelacion);
+      this.cerrarModalCancelar();
+      this.mensaje = 'Turno cancelado exitosamente';
+      setTimeout(() => { this.mensaje = ''; }, 3500);
+      await this.ngOnInit();
+    } catch (error) {
+      this.errorMotivo = 'Error al cancelar el turno';
+    }
   }
-
-  mostrarDialogoCalificacion(turnoId: string) {
-    this.mostrarCalificacion = turnoId;
+  
+  // Acciones - Ver Reseña
+  abrirModalResena(turno: any) {
+    this.resenaAMostrar = turno.resena || 'Sin reseña disponible.';
+    this.mostrarModalResena = true;
+  }
+  
+  cerrarModalResena() {
+    this.mostrarModalResena = false;
+    this.resenaAMostrar = '';
+  }
+  
+  // Acciones - Encuesta
+  abrirModalEncuesta(turno: any) {
+    this.turnoAOperar = turno;
+    this.comentarioEncuesta = '';
+    this.estrellasEncuesta = 0;
+    this.errorEncuesta = '';
+    this.mostrarModalEncuesta = true;
+  }
+  
+  cerrarModalEncuesta() {
+    this.mostrarModalEncuesta = false;
+    this.turnoAOperar = null;
+    this.comentarioEncuesta = '';
+    this.estrellasEncuesta = 0;
+    this.errorEncuesta = '';
+  }
+  
+  async confirmarEncuesta() {
+    this.errorEncuesta = '';
+    if (!this.comentarioEncuesta.trim() || this.estrellasEncuesta < 1) {
+      this.errorEncuesta = 'Debes dejar un comentario y seleccionar una cantidad de estrellas.';
+      return;
+    }
+    try {
+      await this.turnosService.completarEncuesta(this.turnoAOperar.id, this.comentarioEncuesta, this.estrellasEncuesta);
+      this.cerrarModalEncuesta();
+      this.mensaje = '¡Encuesta enviada con éxito!';
+      setTimeout(() => { this.mensaje = ''; }, 3500);
+      await this.ngOnInit();
+    } catch (error) {
+      this.errorEncuesta = 'Error al enviar la encuesta';
+    }
+  }
+  
+  // Acciones - Calificar Atención
+  abrirModalCalificar(turno: any) {
+    this.turnoAOperar = turno;
     this.calificacionPuntaje = 5;
     this.calificacionComentario = '';
+    this.errorMotivo = '';
+    this.mostrarModalCalificar = true;
   }
-
-  calificarAtencion(turno: Turno) {
+  
+  cerrarModalCalificar() {
+    this.mostrarModalCalificar = false;
+    this.turnoAOperar = null;
+    this.calificacionPuntaje = 5;
+    this.calificacionComentario = '';
+    this.errorMotivo = '';
+  }
+  
+  async confirmarCalificacion() {
+    this.errorMotivo = '';
     if (!this.calificacionComentario.trim()) {
-      this.mensaje = 'Debes dejar un comentario para calificar la atención.';
+      this.errorMotivo = 'Debes dejar un comentario sobre la atención.';
       return;
     }
-    this.turnosService.calificarAtencion(turno.id, this.calificacionPuntaje, this.calificacionComentario).then(() => {
+    try {
+      await this.turnosService.calificarAtencion(this.turnoAOperar.id, this.calificacionPuntaje, this.calificacionComentario);
+      this.cerrarModalCalificar();
       this.mensaje = '¡Gracias por calificar la atención!';
-      this.mostrarCalificacion = null;
-      this.calificacionComentario = '';
-      this.ngOnInit();
-    });
+      setTimeout(() => { this.mensaje = ''; }, 3500);
+      await this.ngOnInit();
+    } catch (error) {
+      this.errorMotivo = 'Error al calificar la atención';
+    }
   }
-
-  completarEncuesta(turno: Turno) {
-    this.turnosService.completarEncuesta(turno.id).then(() => {
-      this.mensaje = 'Encuesta completada.';
-      this.ngOnInit();
-    });
-  }
-
+  
   limpiarMensaje() {
     this.mensaje = '';
   }
@@ -158,10 +255,10 @@ export class MisTurnosPacienteComponent implements OnInit {
     return !!turno.resena;
   }
   puedeCompletarEncuesta(turno: Turno): boolean {
-    return turno.estado === 'realizado' && !turno.encuestaCompletada && !!turno.resena;
+    return turno.estado === 'realizado' && !turno.encuestacompletada && !!turno.resena;
   }
   puedeCalificar(turno: Turno): boolean {
-    return turno.estado === 'realizado' && !turno.calificacionAtencion;
+    return turno.estado === 'realizado' && !turno.calificacionatencion;
   }
   estadoTurno(turno: Turno): string {
     switch (turno.estado) {

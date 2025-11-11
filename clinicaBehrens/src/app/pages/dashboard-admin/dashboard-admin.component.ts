@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RegistroService } from '../../services/registro.service';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -142,5 +143,86 @@ export class DashboardAdminComponent implements OnInit {
     } else {
       return 'Pendiente';
     }
+  }
+
+  // Habilitar/Inhabilitar acceso al sistema
+  async habilitarEspecialista(especialista: any) {
+    if (!confirm(`¿Estás seguro que deseas habilitar el acceso de ${especialista.nombre} ${especialista.apellido}?`)) {
+      return;
+    }
+
+    try {
+      // Cambiar estado a aprobado y no rechazado
+      const { error } = await this.registroService.getSupabase()
+        .from('perfiles')
+        .update({ 
+          aprobado: true,
+          rechazado: false
+        })
+        .eq('user_id', especialista.user_id);
+
+      if (error) throw error;
+
+      // Actualizar listas
+      await this.cargarUsuarios();
+      await this.cargarEspecialistasPendientes();
+
+      alert('Especialista habilitado exitosamente');
+    } catch (error) {
+      console.error('Error habilitando especialista:', error);
+      alert('Error al habilitar especialista');
+    }
+  }
+
+  async inhabilitarEspecialista(especialista: any) {
+    if (!confirm(`¿Estás seguro que deseas inhabilitar el acceso de ${especialista.nombre} ${especialista.apellido}?\n\nEsto bloqueará su acceso al sistema.`)) {
+      return;
+    }
+
+    try {
+      // Cambiar estado a no aprobado (mantener rechazado en false para diferenciarlo)
+      const { error } = await this.registroService.getSupabase()
+        .from('perfiles')
+        .update({ 
+          aprobado: false
+        })
+        .eq('user_id', especialista.user_id);
+
+      if (error) throw error;
+
+      // Actualizar listas
+      await this.cargarUsuarios();
+      await this.cargarEspecialistasPendientes();
+
+      alert('Especialista inhabilitado. Ya no podrá acceder al sistema.');
+    } catch (error) {
+      console.error('Error inhabilitando especialista:', error);
+      alert('Error al inhabilitar especialista');
+    }
+  }
+
+  descargarExcelUsuarios() {
+    // Preparar datos para Excel
+    const datosExcel = this.usuarios.map(u => ({
+      'Tipo': u.tipo,
+      'Nombre': u.nombre,
+      'Apellido': u.apellido,
+      'DNI': u.dni || '',
+      'Email': u.email,
+      'Especialidad': u.especialidad || '-',
+      'Obra Social': u.obra_social || '-',
+      'Estado': u.tipo === 'especialista' ? (u.aprobado ? 'Aprobado' : (u.rechazado ? 'Rechazado' : 'Pendiente')) : '-'
+    }));
+
+    // Crear hoja de cálculo
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosExcel);
+    
+    // Crear libro de trabajo
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
+    
+    // Generar archivo Excel
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `usuarios-clinica-${fecha}.xlsx`);
   }
 }

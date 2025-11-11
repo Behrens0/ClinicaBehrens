@@ -12,39 +12,67 @@ export class TurnosService {
 
   // Obtener turnos por paciente
   getTurnosPorPaciente(pacienteId: string): Observable<Turno[]> {
+    console.log('🔍 [TurnosService] Buscando turnos para paciente:', pacienteId);
     return from(
       this.supabaseService.getSupabase()
         .from('turnos')
         .select('*')
-        .eq('pacienteId', pacienteId)
+        .eq('pacienteid', pacienteId)
     ).pipe(
       // @ts-ignore
-      map((res) => res.data as Turno[])
+      map((res) => {
+        console.log('📦 [TurnosService] Respuesta de Supabase:', res);
+        if (res.error) {
+          console.error('❌ [TurnosService] Error:', res.error);
+        }
+        const turnos = res.data as Turno[];
+        console.log('✅ [TurnosService] Turnos encontrados:', turnos?.length || 0);
+        return turnos;
+      })
     );
   }
 
   // Obtener turnos por especialista
   getTurnosPorEspecialista(especialistaId: string): Observable<Turno[]> {
+    console.log('🔍 [TurnosService] Buscando turnos para especialista:', especialistaId);
     return from(
       this.supabaseService.getSupabase()
         .from('turnos')
         .select('*')
-        .eq('especialistaId', especialistaId)
+        .eq('especialistaid', especialistaId)
     ).pipe(
       // @ts-ignore
-      map((res) => res.data as Turno[])
+      map((res) => {
+        console.log('📦 [TurnosService] Respuesta de Supabase:', res);
+        if (res.error) {
+          console.error('❌ [TurnosService] Error:', res.error);
+        }
+        const turnos = res.data as Turno[];
+        console.log('✅ [TurnosService] Turnos encontrados:', turnos?.length || 0);
+        return turnos;
+      })
     );
   }
 
   // Obtener todos los turnos (para administrador)
   getTodosLosTurnos(): Observable<Turno[]> {
+    console.log('🔍 [TurnosService] Obteniendo TODOS los turnos...');
     return from(
       this.supabaseService.getSupabase()
         .from('turnos')
         .select('*')
+        .order('fecha', { ascending: false })
     ).pipe(
       // @ts-ignore
-      map((res) => res.data as Turno[])
+      map((res) => {
+        console.log('📦 [TurnosService] Respuesta de Supabase:', res);
+        if (res.error) {
+          console.error('❌ [TurnosService] Error:', res.error);
+        }
+        const turnos = res.data as Turno[];
+        console.log('✅ [TurnosService] Total de turnos encontrados:', turnos?.length || 0);
+        return turnos;
+      })
     );
   }
 
@@ -62,12 +90,21 @@ export class TurnosService {
   }
 
   // Solicitar un nuevo turno
-  solicitarTurno(turno: any): Promise<any> {
-    return Promise.resolve(
-      this.supabaseService.getSupabase()
-        .from('turnos')
-        .insert([turno])
-    );
+  async solicitarTurno(turno: any): Promise<any> {
+    console.log('🔵 [TurnosService] Intentando insertar turno:', turno);
+    
+    const { data, error } = await this.supabaseService.getSupabase()
+      .from('turnos')
+      .insert([turno])
+      .select();
+    
+    if (error) {
+      console.error('❌ [TurnosService] Error al insertar turno:', error);
+      throw error;
+    }
+    
+    console.log('✅ [TurnosService] Turno insertado correctamente:', data);
+    return data;
   }
 
   // Cancelar turno (paciente o especialista)
@@ -75,7 +112,7 @@ export class TurnosService {
     return Promise.resolve(
       this.supabaseService.getSupabase()
         .from('turnos')
-        .update({ estado: 'cancelado', comentarioPaciente: comentario })
+        .update({ estado: 'cancelado', comentariopaciente: comentario })
         .eq('id', turnoId)
     );
   }
@@ -85,7 +122,7 @@ export class TurnosService {
     return Promise.resolve(
       this.supabaseService.getSupabase()
         .from('turnos')
-        .update({ estado: 'rechazado', comentarioEspecialista: comentario })
+        .update({ estado: 'rechazado', comentarioespecialista: comentario })
         .eq('id', turnoId)
     );
   }
@@ -115,17 +152,21 @@ export class TurnosService {
     return Promise.resolve(
       this.supabaseService.getSupabase()
         .from('turnos')
-        .update({ calificacionAtencion: { puntaje, comentario } })
+        .update({ calificacionatencion: { puntaje, comentario } })
         .eq('id', turnoId)
     );
   }
 
   // Completar encuesta (paciente)
-  completarEncuesta(turnoId: string): Promise<any> {
+  completarEncuesta(turnoId: string, comentario: string, estrellas: number): Promise<any> {
     return Promise.resolve(
       this.supabaseService.getSupabase()
         .from('turnos')
-        .update({ encuestaCompletada: true })
+        .update({ 
+          encuestacompletada: true,
+          encuestacomentario: comentario,
+          encuestaestrellas: estrellas
+        })
         .eq('id', turnoId)
     );
   }

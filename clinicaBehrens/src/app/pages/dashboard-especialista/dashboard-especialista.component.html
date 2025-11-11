@@ -1,1 +1,111 @@
-<p>dashboard-especialista works!</p>
+<div class="dashboard-container" *ngIf="!isLoading">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-info">
+      <h1>Bienvenido, Dr./Dra. {{ especialista?.nombre }} {{ especialista?.apellido }}</h1>
+      <p class="especialidad">{{ especialista?.especialidad }}</p>
+    </div>
+    <div class="header-avatar" *ngIf="especialista?.imagen_perfil">
+      <img [src]="especialista.imagen_perfil" [alt]="especialista.nombre">
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="estadisticas-grid">
+    <div class="stat-card pendiente">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.turnosPendientes }}</h3>
+        <p>Turnos Pendientes</p>
+      </div>
+    </div>
+
+    <div class="stat-card aceptado">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.turnosAceptados }}</h3>
+        <p>Turnos Aceptados</p>
+      </div>
+    </div>
+
+    <div class="stat-card realizado">
+      <div class="stat-icon">🏥</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.turnosRealizados }}</h3>
+        <p>Turnos Realizados</p>
+      </div>
+    </div>
+
+    <div class="stat-card pacientes">
+      <div class="stat-icon">👥</div>
+      <div class="stat-info">
+        <h3>{{ estadisticas.pacientesAtendidos }}</h3>
+        <p>Pacientes Atendidos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones Rápidas -->
+  <div class="acciones-rapidas">
+    <h2>Acciones Rápidas</h2>
+    <div class="acciones-grid">
+      <button class="accion-card" (click)="irAMisTurnos()">
+        <div class="accion-icon">📅</div>
+        <h3>Mis Turnos</h3>
+        <p>Gestiona tus turnos pendientes y realizados</p>
+      </button>
+
+      <button class="accion-card" (click)="irAPacientes()">
+        <div class="accion-icon">👨‍⚕️</div>
+        <h3>Mis Pacientes</h3>
+        <p>Ve el historial de tus pacientes</p>
+      </button>
+
+      <button class="accion-card" (click)="irAMiPerfil()">
+        <div class="accion-icon">⚙️</div>
+        <h3>Mi Perfil</h3>
+        <p>Configura tu disponibilidad horaria</p>
+      </button>
+    </div>
+  </div>
+
+  <!-- Próximos Turnos -->
+  <div class="proximos-turnos" *ngIf="proximosTurnos.length > 0">
+    <h2>Próximos Turnos</h2>
+    <div class="turnos-list">
+      <div class="turno-card" *ngFor="let turno of proximosTurnos">
+        <div class="turno-fecha">
+          <div class="fecha-icon">📅</div>
+          <div class="fecha-info">
+            <p class="fecha">{{ formatearFecha(turno.fecha) }}</p>
+          </div>
+        </div>
+        <div class="turno-info">
+          <h3>{{ turno.pacientenombre }}</h3>
+          <p class="especialidad-turno">{{ turno.especialidad }}</p>
+        </div>
+        <div class="turno-estado">
+          <span [class]="getEstadoClass(turno.estado)">
+            {{ getEstadoTexto(turno.estado) }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-ver-todos" (click)="irAMisTurnos()">
+      Ver Todos los Turnos →
+    </button>
+  </div>
+
+  <!-- Mensaje sin turnos -->
+  <div class="sin-turnos" *ngIf="proximosTurnos.length === 0">
+    <div class="sin-turnos-icon">📭</div>
+    <h3>No tienes turnos próximos</h3>
+    <p>Los turnos que te asignen aparecerán aquí</p>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-container" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Cargando dashboard...</p>
+</div>

@@ -27,60 +27,54 @@ export class HistoriaClinicaService {
   }
 
   // Obtener historias clínicas de un paciente
-  getHistoriasPorPaciente(pacienteId: string): Observable<HistoriaClinicaCompleta[]> {
+  getHistoriasPorPaciente(pacienteId: string): Observable<any[]> {
     return from(this.supabaseService.getSupabase()
       .from('historias_clinicas')
-      .select(`
-        *,
-        paciente:perfiles!historias_clinicas_paciente_id_fkey(*),
-        especialista:perfiles!historias_clinicas_especialista_id_fkey(*),
-        turno:turnos(*)
-      `)
+      .select('*')
       .eq('paciente_id', pacienteId)
       .order('fecha_atencion', { ascending: false }))
       .pipe(
         map(({ data, error }) => {
-          if (error) throw error;
-          return data || [];
+          if (error) {
+            console.error('❌ Error al obtener historias:', error);
+            throw error;
+          }
+          return (data || []).map(d => ({ historia: d, paciente: null, especialista: null, turno: null }));
         })
       );
   }
 
   // Obtener historias clínicas por especialista
-  getHistoriasPorEspecialista(especialistaId: string): Observable<HistoriaClinicaCompleta[]> {
+  getHistoriasPorEspecialista(especialistaId: string): Observable<any[]> {
     return from(this.supabaseService.getSupabase()
       .from('historias_clinicas')
-      .select(`
-        *,
-        paciente:perfiles!historias_clinicas_paciente_id_fkey(*),
-        especialista:perfiles!historias_clinicas_especialista_id_fkey(*),
-        turno:turnos(*)
-      `)
+      .select('*')
       .eq('especialista_id', especialistaId)
       .order('fecha_atencion', { ascending: false }))
       .pipe(
         map(({ data, error }) => {
-          if (error) throw error;
-          return data || [];
+          if (error) {
+            console.error('❌ Error al obtener historias:', error);
+            throw error;
+          }
+          return (data || []).map(d => ({ historia: d, paciente: null, especialista: null, turno: null }));
         })
       );
   }
 
   // Obtener todas las historias clínicas (para administradores)
-  getTodasHistorias(): Observable<HistoriaClinicaCompleta[]> {
+  getTodasHistorias(): Observable<any[]> {
     return from(this.supabaseService.getSupabase()
       .from('historias_clinicas')
-      .select(`
-        *,
-        paciente:perfiles!historias_clinicas_paciente_id_fkey(*),
-        especialista:perfiles!historias_clinicas_especialista_id_fkey(*),
-        turno:turnos(*)
-      `)
+      .select('*')
       .order('fecha_atencion', { ascending: false }))
       .pipe(
         map(({ data, error }) => {
-          if (error) throw error;
-          return data || [];
+          if (error) {
+            console.error('❌ Error al obtener historias:', error);
+            throw error;
+          }
+          return (data || []).map(d => ({ historia: d, paciente: null, especialista: null, turno: null }));
         })
       );
   }
@@ -101,22 +95,20 @@ export class HistoriaClinicaService {
   }
 
   // Obtener historias clínicas de un paciente por un especialista específico
-  getHistoriasPacientePorEspecialista(pacienteId: string, especialistaId: string): Observable<HistoriaClinicaCompleta[]> {
+  getHistoriasPacientePorEspecialista(pacienteId: string, especialistaId: string): Observable<any[]> {
     return from(this.supabaseService.getSupabase()
       .from('historias_clinicas')
-      .select(`
-        *,
-        paciente:perfiles!historias_clinicas_paciente_id_fkey(*),
-        especialista:perfiles!historias_clinicas_especialista_id_fkey(*),
-        turno:turnos(*)
-      `)
+      .select('*')
       .eq('paciente_id', pacienteId)
       .eq('especialista_id', especialistaId)
       .order('fecha_atencion', { ascending: false }))
       .pipe(
         map(({ data, error }) => {
-          if (error) throw error;
-          return data || [];
+          if (error) {
+            console.error('❌ Error al obtener historias:', error);
+            throw error;
+          }
+          return (data || []).map(d => ({ historia: d, paciente: null, especialista: null, turno: null }));
         })
       );
   }
