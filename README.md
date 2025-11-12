@@ -10,26 +10,6 @@ Clínica Behrens es un sistema integral de gestión de clínica médica desarrol
 
 ## ✨ Características Principales
 
-### Sprint 1 ✅
-- ✅ Página de Bienvenida (Home/Landing Page)
-- ✅ Sistema de Login con validación de usuarios
-- ✅ Botones de Acceso Rápido para testing
-- ✅ Registro de Usuarios (Pacientes, Especialistas, Administradores)
-- ✅ Captcha personalizado
-- ✅ Gestión de Usuarios (Admin)
-- ✅ Habilitar/Inhabilitar Especialistas
-- ✅ Loading Spinner Global
-- ✅ Favicon personalizado
-- ✅ Deployado en Firebase Hosting
-
-### Sprint 2 (En Desarrollo) 🚧
-- 🚧 Mis Turnos (Paciente, Especialista, Administrador)
-- 🚧 Solicitar Turno
-- 🚧 Mi Perfil con horarios de disponibilidad
-- 🚧 Filtros de búsqueda sin combobox
-- 🚧 Sistema de reseñas y calificaciones
-
----
 
 ## 🚀 Acceso al Sistema
 
