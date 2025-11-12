@@ -3,55 +3,108 @@
 
   <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
 
-  <form (ngSubmit)="solicitarTurno()" class="form-turno">
-    <!-- Selección de paciente (solo admin) -->
-    <div *ngIf="esAdmin">
-      <label>Paciente:</label>
-      <div class="opciones-lista">
-        <button type="button" *ngFor="let p of pacientes" [class.selected]="pacienteSeleccionado === p" (click)="pacienteSeleccionado = p">
-          {{ p.nombre }} {{ p.apellido }}
+  <div class="turno-wizard">
+    <!-- Paso 1: Selección de paciente (solo admin) -->
+    <div *ngIf="esAdmin" class="paso-seleccion">
+      <h3 class="paso-titulo">Selecciona el Paciente</h3>
+      <div class="grid-pacientes">
+        <button 
+          type="button" 
+          *ngFor="let p of pacientes" 
+          class="btn-paciente"
+          [class.selected]="pacienteSeleccionado === p" 
+          (click)="pacienteSeleccionado = p"
+        >
+          <div class="paciente-avatar">
+            <img *ngIf="p.imagen_perfil" [src]="p.imagen_perfil" [alt]="p.nombre" />
+            <span *ngIf="!p.imagen_perfil" class="avatar-placeholder">{{ p.nombre?.charAt(0) }}{{ p.apellido?.charAt(0) }}</span>
+          </div>
+          <span class="paciente-nombre">{{ p.nombre }} {{ p.apellido }}</span>
         </button>
       </div>
     </div>
 
-    <!-- Selección de especialidad -->
-    <label>Especialidad:</label>
-    <div class="opciones-lista">
-      <button type="button" *ngFor="let esp of especialidades" [class.selected]="especialidadSeleccionada === esp" (click)="seleccionarEspecialidad(esp)">
-        {{ esp }}
+    <!-- Paso 2: Selección de especialidad -->
+    <div class="paso-seleccion">
+      <h3 class="paso-titulo">Selecciona la Especialidad</h3>
+      <div class="grid-especialidades">
+        <button 
+          type="button" 
+          *ngFor="let esp of especialidadesConImagen" 
+          class="btn-especialidad"
+          [class.selected]="especialidadSeleccionada === esp.nombre" 
+          (click)="seleccionarEspecialidad(esp.nombre)"
+          [title]="esp.nombre"
+        >
+          <div class="especialidad-icono">
+            <img [src]="esp.imagen" [alt]="esp.nombre" />
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Paso 3: Selección de especialista -->
+    <div *ngIf="especialidadSeleccionada" class="paso-seleccion animate-in">
+      <h3 class="paso-titulo">Selecciona el Especialista</h3>
+      <div class="grid-especialistas">
+        <button 
+          type="button" 
+          *ngFor="let e of especialistasFiltrados" 
+          class="btn-especialista"
+          [class.selected]="especialistaSeleccionado === e" 
+          (click)="seleccionarEspecialista(e)"
+        >
+          <div class="especialista-avatar">
+            <img *ngIf="e.imagen_perfil" [src]="e.imagen_perfil" [alt]="e.nombre" />
+            <span *ngIf="!e.imagen_perfil" class="avatar-placeholder">{{ e.nombre?.charAt(0) }}{{ e.apellido?.charAt(0) }}</span>
+          </div>
+          <span class="especialista-nombre">{{ e.nombre }} {{ e.apellido }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Paso 4: Selección de día -->
+    <div *ngIf="especialistaSeleccionado && diasDisponibles.length" class="paso-seleccion animate-in">
+      <h3 class="paso-titulo">Selecciona el Día</h3>
+      <div class="grid-dias">
+        <button 
+          type="button" 
+          *ngFor="let d of diasDisponibles" 
+          class="btn-dia"
+          [class.selected]="diaSeleccionado === d" 
+          (click)="seleccionarDia(d)"
+        >
+          {{ formatearFechaCorta(d) }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Paso 5: Selección de horario -->
+    <div *ngIf="diaSeleccionado" class="paso-seleccion animate-in">
+      <h3 class="paso-titulo">Selecciona el Horario</h3>
+      <div class="grid-horarios">
+        <button 
+          type="button" 
+          *ngFor="let h of horariosFiltrados" 
+          class="btn-horario"
+          [class.selected]="horarioSeleccionado === h" 
+          (click)="seleccionarHorario(h)"
+        >
+          {{ formatearHora(h.hora_inicio) }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Botón de confirmación -->
+    <div *ngIf="horarioSeleccionado" class="paso-confirmacion animate-in">
+      <button 
+        type="button" 
+        class="btn-confirmar"
+        [disabled]="!especialidadSeleccionada || !especialistaSeleccionado || !diaSeleccionado || !horarioSeleccionado || (esAdmin && !pacienteSeleccionado)"
+        (click)="solicitarTurno()"
+      >
+        ✓ Confirmar Turno
       </button>
     </div>
-
-    <!-- Selección de especialista -->
-    <div *ngIf="especialidadSeleccionada">
-      <label>Especialista:</label>
-      <div class="opciones-lista">
-        <button type="button" *ngFor="let e of especialistasFiltrados" [class.selected]="especialistaSeleccionado === e" (click)="seleccionarEspecialista(e)">
-          {{ e.nombre }} {{ e.apellido }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Selección de día -->
-    <div *ngIf="especialistaSeleccionado && diasDisponibles.length">
-      <label>Día:</label>
-      <div class="opciones-lista">
-        <button type="button" *ngFor="let d of diasDisponibles" [class.selected]="diaSeleccionado === d" (click)="seleccionarDia(d)">
-          {{ d }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Selección de horario -->
-    <div *ngIf="diaSeleccionado">
-      <label>Horario:</label>
-      <div class="opciones-lista">
-        <button type="button" *ngFor="let h of horariosFiltrados" [class.selected]="horarioSeleccionado === h" (click)="seleccionarHorario(h)">
-          {{ h.hora_inicio }} a {{ h.hora_fin }}
-        </button>
-      </div>
-    </div>
-
-    <button type="submit" [disabled]="!especialidadSeleccionada || !especialistaSeleccionado || !diaSeleccionado || !horarioSeleccionado || (esAdmin && !pacienteSeleccionado)">Solicitar Turno</button>
-  </form>
+  </div>
 </div>

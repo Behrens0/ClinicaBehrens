@@ -54,6 +54,32 @@ export class TurnosService {
     );
   }
 
+  // Obtener turnos por especialista y fecha específica
+  async getTurnosPorEspecialistaYFecha(especialistaId: string, fecha: string): Promise<any[]> {
+    try {
+      console.log('🔍 [TurnosService] Buscando turnos para especialista y fecha:', { especialistaId, fecha });
+      
+      const { data, error } = await this.supabaseService.getSupabase()
+        .from('turnos')
+        .select('*')
+        .eq('especialistaid', especialistaId)
+        .gte('fecha', `${fecha}T00:00:00`)
+        .lte('fecha', `${fecha}T23:59:59`)
+        .in('estado', ['pendiente', 'aceptado']); // Solo turnos activos
+      
+      if (error) {
+        console.error('❌ [TurnosService] Error:', error);
+        return [];
+      }
+      
+      console.log('✅ [TurnosService] Turnos encontrados para la fecha:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('❌ [TurnosService] Error en getTurnosPorEspecialistaYFecha:', error);
+      return [];
+    }
+  }
+
   // Obtener todos los turnos (para administrador)
   getTodosLosTurnos(): Observable<Turno[]> {
     console.log('🔍 [TurnosService] Obteniendo TODOS los turnos...');
@@ -138,13 +164,42 @@ export class TurnosService {
   }
 
   // Finalizar turno (especialista)
-  finalizarTurno(turnoId: string, reseña: string): Promise<any> {
-    return Promise.resolve(
-      this.supabaseService.getSupabase()
+  async finalizarTurno(turnoId: string, reseña: string): Promise<any> {
+    console.log('🔵 [TurnosService] === INICIO FINALIZAR TURNO ===');
+    console.log('📋 [TurnosService] Turno ID:', turnoId);
+    console.log('📋 [TurnosService] Reseña:', reseña);
+    console.log('📋 [TurnosService] Tipo de turnoId:', typeof turnoId);
+    console.log('📋 [TurnosService] Tipo de reseña:', typeof reseña);
+    
+    try {
+      const { data, error } = await this.supabaseService.getSupabase()
         .from('turnos')
-        .update({ estado: 'realizado', reseña })
+        .update({ 
+          estado: 'realizado', 
+          resena: reseña  // Corregido: 'resena' sin tilde
+        })
         .eq('id', turnoId)
-    );
+        .select();
+      
+      console.log('📦 [TurnosService] Respuesta de Supabase:', { data, error });
+      
+      if (error) {
+        console.error('❌ [TurnosService] Error de Supabase:', error);
+        console.error('❌ [TurnosService] Error code:', error.code);
+        console.error('❌ [TurnosService] Error message:', error.message);
+        console.error('❌ [TurnosService] Error details:', error.details);
+        console.error('❌ [TurnosService] Error hint:', error.hint);
+        throw error;
+      }
+      
+      console.log('✅ [TurnosService] Turno finalizado correctamente');
+      console.log('✅ [TurnosService] Datos actualizados:', data);
+      return data;
+    } catch (error: any) {
+      console.error('❌ [TurnosService] === ERROR CRÍTICO EN FINALIZAR TURNO ===');
+      console.error('❌ [TurnosService] Error:', error);
+      throw error;
+    }
   }
 
   // Calificar atención (paciente)

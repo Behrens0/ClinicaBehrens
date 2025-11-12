@@ -67,6 +67,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/pacientes-especialista/pacientes-especialista.component').then(m => m.PacientesEspecialistaComponent)
   },
   {
+    path: 'estadisticas',
+    loadComponent: () => import('./pages/estadisticas/estadisticas.component').then(m => m.EstadisticasComponent)
+  },
+  {
     path: '**',
     redirectTo: '/login'
   }

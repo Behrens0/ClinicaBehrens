@@ -29,14 +29,13 @@ export class CustomValidators {
     };
   }
 
-  // Validador para contraseña (mínimo 8 caracteres, al menos una mayúscula, una minúscula y un número)
+  // Validador para contraseña (mínimo 6 caracteres)
   static passwordValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const password = control.value;
       if (!password) return null;
       
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
-      if (!passwordRegex.test(password)) {
+      if (password.length < 6) {
         return { passwordInvalida: true };
       }
       return null;

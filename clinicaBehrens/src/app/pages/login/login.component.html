@@ -1,9 +1,10 @@
 <div class="login-container">
+  <div class="login-wrapper">
   <div class="login-card">
     <!-- Header -->
     <div class="login-header">
       <div class="logo-container">
-        <img src="https://sxdosrgvnxbxifxvasks.supabase.co/storage/v1/object/public/clinica/clinica-logo2.jpg" alt="Clínica Logo" class="logo" />
+        <img src="https://sxdosrgvnxbxifxvasks.supabase.co/storage/v1/object/public/imagenes/diseno-logotipo-hospital-vector-cruz-medica_53876-136743.ico" alt="Clínica Behrens Logo" class="logo" />
       </div>
       <h1 class="title">Bienvenido</h1>
       <p class="subtitle">Inicia sesión en tu cuenta</p>
@@ -92,25 +93,6 @@
       </div>
     </form>
 
-    <!-- Acceso Rápido -->
-    <div class="quick-access">
-      <h3 class="quick-access-title">Acceso Rápido</h3>
-      <div class="quick-access-buttons">
-        <button
-          *ngFor="let acceso of accesoRapido"
-          type="button"
-          class="quick-access-button"
-          (click)="accesoRapidoClick(acceso)"
-          [disabled]="isLoading"
-        >
-          <i class="quick-access-icon">
-            {{ acceso.label === 'Admin' ? '👨‍⚕️' : acceso.label === 'Paciente' ? '👤' : '👩‍⚕️' }}
-          </i>
-          {{ acceso.label }}
-        </button>
-      </div>
-    </div>
-
     <!-- Enlaces adicionales -->
     <div class="additional-links">
       <button type="button" class="link-button" (click)="recuperarPassword()">
@@ -143,5 +125,25 @@
         © 2025 Clínica Behrens. Todos los derechos reservados.
       </p>
     </div>
+  </div>
+
+    <!-- Acceso Rápido (Lateral derecho) -->
+    <div class="quick-access-sidebar">
+      <h3 class="quick-access-title">Acceso Rápido</h3>
+      <div class="quick-access-buttons">
+        <button
+          *ngFor="let acceso of accesoRapido"
+          type="button"
+          class="quick-access-button"
+          (click)="accesoRapidoClick(acceso)"
+          [disabled]="isLoading"
+          [attr.data-tipo]="acceso.tipo"
+          [title]="acceso.nombre"
+        >
+          <img [src]="acceso.foto" [alt]="acceso.nombre" class="user-avatar" />
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>

@@ -27,23 +27,34 @@ export class PacientesEspecialistaComponent implements OnInit {
   async ngOnInit() {
     const session = await this.registroService.getSesionActual();
     this.especialistaId = session?.data?.session?.user?.id || '';
+    console.log('🔵 [PacientesEspecialista] Especialista ID:', this.especialistaId);
     if (this.especialistaId) {
       this.cargarPacientes();
     }
   }
 
   cargarPacientes() {
+    console.log('🔵 [PacientesEspecialista] === CARGANDO PACIENTES ===');
+    console.log('📋 [PacientesEspecialista] Especialista ID:', this.especialistaId);
+    
     this.historiaClinicaService.getPacientesAtendidosPorEspecialista(this.especialistaId).subscribe({
       next: async (pacienteIds) => {
+        console.log('📋 [PacientesEspecialista] IDs de pacientes recibidos:', pacienteIds);
+        console.log('📋 [PacientesEspecialista] Cantidad de pacientes:', pacienteIds.length);
+        
         this.pacientes = [];
         for (const pacienteId of pacienteIds) {
+          console.log('🔍 [PacientesEspecialista] Buscando perfil para paciente:', pacienteId);
           const perfil = await this.registroService.getPerfilPorUserId(pacienteId);
+          console.log('📄 [PacientesEspecialista] Perfil encontrado:', perfil);
           if (perfil) {
             this.pacientes.push(perfil);
           }
         }
+        console.log('✅ [PacientesEspecialista] Pacientes cargados:', this.pacientes);
       },
       error: (error) => {
+        console.error('❌ [PacientesEspecialista] Error al cargar pacientes:', error);
         this.mensaje = 'Error al cargar los pacientes';
         console.error(error);
       }

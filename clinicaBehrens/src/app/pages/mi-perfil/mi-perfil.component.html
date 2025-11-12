@@ -68,6 +68,13 @@
     <!-- Gestión de horarios solo para especialistas -->
     <div *ngIf="esEspecialista" class="disponibilidad-section">
       <h3>Mis Horarios</h3>
+      <div class="horarios-clinica-info">
+        <h4>⏰ Horarios de Atención de la Clínica</h4>
+        <p><strong>Lunes a Viernes:</strong> 8:00 - 19:00</p>
+        <p><strong>Sábado:</strong> 8:00 - 14:00</p>
+        <p><strong>Domingo:</strong> Cerrado</p>
+        <small>⚠️ Solo puedes agregar disponibilidad dentro de estos horarios</small>
+      </div>
       <form (ngSubmit)="agregarDisponibilidad()" class="form-disponibilidad">
         <label>Especialidad:</label>
         <select [(ngModel)]="nuevaDisponibilidad.especialidad" name="especialidad" required>

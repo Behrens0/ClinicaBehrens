@@ -1,5 +1,40 @@
 <app-loading-spinner></app-loading-spinner>
-<div style="width: 100%; display: flex; justify-content: flex-end; padding: 1rem 2rem 0 0;">
-  <button (click)="logout()" style="padding: 0.5rem 1.2rem; font-size: 1rem;">Logout</button>
+
+<!-- Navbar mejorada - solo visible cuando está logueado y no en rutas públicas -->
+<nav class="navbar" *ngIf="mostrarNavbar && usuarioLogueado">
+  <div class="navbar-container">
+    <!-- Logo y nombre de la clínica -->
+    <div class="navbar-brand" (click)="irAInicio()">
+      <img src="https://sxdosrgvnxbxifxvasks.supabase.co/storage/v1/object/public/imagenes/diseno-logotipo-hospital-vector-cruz-medica_53876-136743.ico" alt="Clínica Behrens Logo" class="navbar-logo">
+      <span class="navbar-title">Clínica Behrens</span>
+    </div>
+
+    <!-- Info del usuario y acciones -->
+    <div class="navbar-actions">
+      <!-- Avatar y nombre -->
+      <div class="user-info" (click)="irAPerfil()">
+        <div class="user-avatar">
+          <img *ngIf="avatarUsuario" [src]="avatarUsuario" [alt]="nombreUsuario">
+          <span *ngIf="!avatarUsuario" class="avatar-placeholder">
+            {{ nombreUsuario.charAt(0) }}
+          </span>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ nombreUsuario }}</span>
+          <span class="user-role">{{ tipoUsuario }}</span>
+        </div>
+      </div>
+
+      <!-- Botón de logout -->
+      <button class="btn-logout" (click)="logout()" title="Cerrar Sesión">
+        <span class="logout-icon">🚪</span>
+        <span class="logout-text">Salir</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Contenido principal con padding cuando hay navbar -->
+<div class="main-content" [class.with-navbar]="mostrarNavbar && usuarioLogueado">
+  <router-outlet @routeFade></router-outlet>
 </div>
-<router-outlet @routeFade></router-outlet> 

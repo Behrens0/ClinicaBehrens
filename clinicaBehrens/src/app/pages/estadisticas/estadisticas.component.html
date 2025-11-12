@@ -1,0 +1,94 @@
+<div class="estadisticas-container">
+  <h1>📊 Estadísticas y Reportes</h1>
+
+  <!-- Filtro de Fechas -->
+  <div class="filtro-fechas">
+    <h3>Filtrar por Rango de Fechas</h3>
+    <div class="fecha-inputs">
+      <div class="input-group">
+        <label>Desde:</label>
+        <input type="date" [(ngModel)]="fechaInicio" />
+      </div>
+      <div class="input-group">
+        <label>Hasta:</label>
+        <input type="date" [(ngModel)]="fechaFin" />
+      </div>
+      <button (click)="aplicarFiltroFecha()" class="btn-filtrar">Aplicar Filtro</button>
+    </div>
+  </div>
+
+  <!-- Botones de Descarga -->
+  <div class="botones-descarga">
+    <button (click)="descargarLogsExcel()" class="btn-descarga excel">
+      📊 Descargar Logs (Excel)
+    </button>
+    <button (click)="descargarEstadisticasExcel()" class="btn-descarga excel">
+      📊 Descargar Estadísticas (Excel)
+    </button>
+    <button (click)="descargarPDF()" class="btn-descarga pdf">
+      📄 Descargar Informe (PDF)
+    </button>
+  </div>
+
+  <!-- Log de Ingresos -->
+  <div class="seccion-logs">
+    <h2>📝 Log de Ingresos al Sistema</h2>
+    <div class="tabla-wrapper">
+      <table class="tabla-logs">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Tipo</th>
+            <th>Fecha y Hora</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs | slice:0:20">
+            <td>{{ log.usuario_nombre | capitalizar }}</td>
+            <td><span class="badge badge-{{log.usuario_tipo}}">{{ log.usuario_tipo }}</span></td>
+            <td>{{ log.fecha_hora | formatoFecha:'larga' }} - {{ log.fecha_hora | date:'HH:mm:ss' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="logs.length === 0" class="mensaje-vacio">No hay registros de ingresos</p>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="graficos-grid">
+    <!-- Gráfico 1: Turnos por Especialidad -->
+    <div class="grafico-card">
+      <h3>Turnos por Especialidad</h3>
+      <div class="chart-container">
+        <canvas id="chartEspecialidad"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Turnos por Día -->
+    <div class="grafico-card">
+      <h3>Turnos por Día</h3>
+      <div class="chart-container">
+        <canvas id="chartDia"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 3: Turnos por Médico -->
+    <div class="grafico-card">
+      <h3>Turnos Solicitados por Médico</h3>
+      <div class="chart-container">
+        <canvas id="chartMedico"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 4: Turnos Finalizados -->
+    <div class="grafico-card">
+      <h3>Turnos Finalizados por Médico</h3>
+      <div class="chart-container">
+        <canvas id="chartFinalizados"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <p *ngIf="mensaje" class="mensaje">{{ mensaje }}</p>
+</div>
+

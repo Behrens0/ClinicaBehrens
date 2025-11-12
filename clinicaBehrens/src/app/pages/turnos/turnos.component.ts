@@ -18,6 +18,7 @@ export class TurnosComponent implements OnInit {
   perfil: any = null;
   pacientes: any[] = [];
   especialidades: string[] = [];
+  especialidadesConImagen: { nombre: string, imagen: string }[] = [];
   especialistas: any[] = [];
   especialistaSeleccionado: any = null;
   especialidadSeleccionada: string = '';
@@ -59,10 +60,14 @@ export class TurnosComponent implements OnInit {
           console.log('Pacientes cargados:', this.pacientes.length);
         }
         
-        // Cargar todas las especialidades y especialistas
-        console.log('Cargando especialidades...');
-        this.especialidades = await this.registroService.getTodasEspecialidades();
-        console.log('Especialidades:', this.especialidades);
+        // Cargar todas las especialidades con imágenes desde la BD
+        console.log('Cargando especialidades con imágenes desde Supabase...');
+        this.especialidadesConImagen = await this.registroService.getEspecialidadesConImagenes();
+        console.log('Especialidades con imágenes:', this.especialidadesConImagen.length);
+        
+        // Extraer solo los nombres para mantener compatibilidad
+        this.especialidades = this.especialidadesConImagen.map(esp => esp.nombre);
+        console.log('Nombres de especialidades:', this.especialidades);
         
         console.log('Cargando especialistas...');
         this.especialistas = await this.registroService.getEspecialistas();
@@ -126,11 +131,33 @@ export class TurnosComponent implements OnInit {
     });
   }
 
-  seleccionarDia(dia: string) {
+  async seleccionarDia(dia: string) {
     this.diaSeleccionado = dia;
-    // Filtrar horarios para ese día
-    this.horariosFiltrados = this.horariosDisponibles.filter(hh => hh.dia === dia);
+    
+    // Obtener bloques de disponibilidad para ese día
+    const bloques = this.horariosDisponibles.filter(hh => hh.dia === dia);
+    
+    // Generar turnos de 30 minutos a partir de los bloques
+    const turnosGenerados: { dia: string, hora_inicio: string, hora_fin: string }[] = [];
+    
+    for (const bloque of bloques) {
+      const turnosDelBloque = this.generarTurnosCada30Min(bloque.hora_inicio, bloque.hora_fin, dia);
+      turnosGenerados.push(...turnosDelBloque);
+    }
+    
+    // Obtener turnos ya ocupados para este especialista y día
+    const turnosOcupados = await this.obtenerTurnosOcupados(dia);
+    
+    // Filtrar turnos disponibles (excluir los ocupados)
+    this.horariosFiltrados = turnosGenerados.filter(turno => {
+      return !turnosOcupados.some(ocupado => ocupado.hora_inicio === turno.hora_inicio);
+    });
+    
     this.horarioSeleccionado = null;
+    
+    console.log('📋 Turnos generados para', dia, ':', turnosGenerados.length);
+    console.log('🚫 Turnos ocupados:', turnosOcupados.length);
+    console.log('✅ Turnos disponibles:', this.horariosFiltrados.length);
   }
 
   seleccionarHorario(horario: { hora_inicio: string, hora_fin: string }) {
@@ -235,5 +262,99 @@ export class TurnosComponent implements OnInit {
 
   limpiarMensaje() {
     this.mensaje = '';
+  }
+
+  // Formatear fecha a DD/MM
+  formatearFechaCorta(fecha: string): string {
+    const partes = fecha.split('/');
+    if (partes.length === 3) {
+      return `${partes[0]}/${partes[1]}`;
+    }
+    return fecha;
+  }
+
+  // Generar turnos cada 30 minutos dentro de un bloque de tiempo
+  generarTurnosCada30Min(horaInicio: string, horaFin: string, dia: string): { dia: string, hora_inicio: string, hora_fin: string }[] {
+    const turnos: { dia: string, hora_inicio: string, hora_fin: string }[] = [];
+    
+    // Parsear hora de inicio
+    const [horaInicioNum, minInicioNum] = horaInicio.split(':').map(Number);
+    const [horaFinNum, minFinNum] = horaFin.split(':').map(Number);
+    
+    // Convertir a minutos desde medianoche
+    let minutosActuales = horaInicioNum * 60 + minInicioNum;
+    const minutosFin = horaFinNum * 60 + minFinNum;
+    
+    // Generar turnos cada 30 minutos
+    while (minutosActuales < minutosFin) {
+      const horasTurno = Math.floor(minutosActuales / 60);
+      const minutosTurno = minutosActuales % 60;
+      
+      // Calcular fin del turno (30 minutos después)
+      const minutosFinTurno = minutosActuales + 30;
+      const horasFinTurno = Math.floor(minutosFinTurno / 60);
+      const minutosFinTurnoReal = minutosFinTurno % 60;
+      
+      // Solo agregar si el fin del turno no excede el horario disponible
+      if (minutosFinTurno <= minutosFin) {
+        const horaInicioStr = `${horasTurno.toString().padStart(2, '0')}:${minutosTurno.toString().padStart(2, '0')}`;
+        const horaFinStr = `${horasFinTurno.toString().padStart(2, '0')}:${minutosFinTurnoReal.toString().padStart(2, '0')}`;
+        
+        turnos.push({
+          dia: dia,
+          hora_inicio: horaInicioStr,
+          hora_fin: horaFinStr
+        });
+      }
+      
+      // Avanzar 30 minutos
+      minutosActuales += 30;
+    }
+    
+    return turnos;
+  }
+
+  // Obtener turnos ya ocupados para un día específico
+  async obtenerTurnosOcupados(dia: string): Promise<{ hora_inicio: string }[]> {
+    try {
+      if (!this.especialistaSeleccionado) return [];
+      
+      // Convertir fecha de formato dd/mm/yyyy a yyyy-mm-dd
+      const partesFecha = dia.split('/');
+      const fechaISO = `${partesFecha[2]}-${partesFecha[1].padStart(2, '0')}-${partesFecha[0].padStart(2, '0')}`;
+      
+      console.log('🔍 Buscando turnos ocupados para:', {
+        especialista: this.especialistaSeleccionado.nombre,
+        fecha: fechaISO
+      });
+      
+      const turnos = await this.turnosService.getTurnosPorEspecialistaYFecha(
+        this.especialistaSeleccionado.user_id,
+        fechaISO
+      );
+      
+      // Extraer solo las horas de inicio
+      const horasOcupadas = turnos.map(turno => {
+        // Extraer hora de la fecha completa (formato: "2024-01-15T09:00:00")
+        const fechaHora = new Date(turno.fecha);
+        const hora = fechaHora.getHours().toString().padStart(2, '0');
+        const minutos = fechaHora.getMinutes().toString().padStart(2, '0');
+        return { hora_inicio: `${hora}:${minutos}` };
+      });
+      
+      console.log('🚫 Horas ocupadas:', horasOcupadas);
+      return horasOcupadas;
+    } catch (error) {
+      console.error('❌ Error obteniendo turnos ocupados:', error);
+      return [];
+    }
+  }
+
+  // Formatear hora a formato 12 horas (12:15am)
+  formatearHora(hora: string): string {
+    const [hours, minutes] = hora.split(':').map(Number);
+    const period = hours >= 12 ? 'pm' : 'am';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
   }
 }

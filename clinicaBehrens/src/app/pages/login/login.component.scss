@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // Variables
 $primary-color: #2563eb;
 $primary-hover: #1d4ed8;
@@ -52,6 +54,17 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   @include flex-center;
   padding: 20px;
+}
+
+// Wrapper principal para el layout
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  width: 100%;
+  max-width: 1400px;
+  position: relative;
 }
 
 // Tarjeta de login
@@ -281,17 +294,29 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
   }
 }
 
-// Acceso rápido
-.quick-access {
-  margin-bottom: 32px;
-  padding: 24px;
-  background-color: $background-color;
-  border-radius: 12px;
-  border: 1px solid $border-color;
+// Acceso rápido sidebar
+.quick-access-sidebar {
+  background: $card-background;
+  border-radius: 16px;
+  box-shadow: $shadow;
+  padding: 20px;
+  width: auto;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $success-color, $primary-color);
+    border-radius: 16px 16px 0 0;
+  }
   
   .quick-access-title {
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     color: $text-primary;
     margin: 0 0 16px 0;
     text-align: center;
@@ -299,27 +324,25 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
   
   .quick-access-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
   
   .quick-access-button {
     @include button-reset;
-    padding: 12px 16px;
+    width: 80px;
+    height: 80px;
+    padding: 0;
     background-color: $card-background;
-    border: 2px solid $border-color;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: $text-primary;
+    border: 3px solid $border-color;
+    border-radius: 12px;
     transition: all 0.3s ease;
-    @include flex-center;
-    gap: 8px;
+    overflow: hidden;
+    position: relative;
     
     &:hover:not(:disabled) {
-      border-color: $primary-color;
-      background-color: rgba(37, 99, 235, 0.05);
-      transform: translateY(-1px);
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     }
     
     &:disabled {
@@ -327,8 +350,33 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
       cursor: not-allowed;
     }
     
-    .quick-access-icon {
-      font-size: 18px;
+    // Colores según tipo de usuario
+    &[data-tipo="administrador"] {
+      &:hover:not(:disabled) {
+        border-color: $error-color;
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+      }
+    }
+    
+    &[data-tipo="especialista"] {
+      &:hover:not(:disabled) {
+        border-color: $success-color;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+      }
+    }
+    
+    &[data-tipo="paciente"] {
+      &:hover:not(:disabled) {
+        border-color: $primary-color;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+      }
+    }
+    
+    .user-avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
   }
 }
@@ -392,7 +440,7 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
     gap: 8px;
     
     &:hover {
-      background-color: darken($success-color, 10%);
+      background-color: color.adjust($success-color, $lightness: -10%);
       transform: translateY(-1px);
     }
     
@@ -415,7 +463,7 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
     gap: 8px;
     
     &:hover {
-      background-color: darken($error-color, 10%);
+      background-color: color.adjust($error-color, $lightness: -10%);
       transform: translateY(-1px);
     }
     
@@ -437,6 +485,28 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
 }
 
 // Responsive
+@media (max-width: 1024px) {
+  .login-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .quick-access-sidebar {
+    order: 2;
+    
+    .quick-access-buttons {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .login-card {
+    order: 1;
+    max-width: 480px;
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   .login-container {
     padding: 16px;
@@ -452,9 +522,14 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
     }
   }
   
-  .quick-access {
+  .quick-access-sidebar {
     .quick-access-buttons {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .quick-access-button {
+      width: 70px;
+      height: 70px;
     }
   }
 }
@@ -467,6 +542,20 @@ $shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.0
   .input-container {
     .form-input {
       font-size: 16px; // Evita zoom en iOS
+    }
+  }
+  
+  .quick-access-sidebar {
+    padding: 16px;
+    
+    .quick-access-buttons {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    
+    .quick-access-button {
+      width: 65px;
+      height: 65px;
     }
   }
 }

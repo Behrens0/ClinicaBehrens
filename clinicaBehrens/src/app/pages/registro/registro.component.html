@@ -1,625 +1,659 @@
 <div class="registro-container">
   <div class="registro-card">
-    <h2>Registro de Usuario</h2>
     
-    <!-- Selector de tipo de usuario -->
-    <div class="tipo-selector">
-      <button 
-        type="button"
-        [class.active]="tipoUsuario === 'paciente'"
-        (click)="seleccionarTipo('paciente')"
-      >
-        Paciente
-      </button>
-      <button 
-        type="button"
-        [class.active]="tipoUsuario === 'especialista'"
-        (click)="seleccionarTipo('especialista')"
-      >
-        Especialista
-      </button>
-      <button 
-        *ngIf="esAdmin"
-        type="button"
-        [class.active]="tipoUsuario === 'administrador'"
-        (click)="seleccionarTipo('administrador')"
-      >
-        Administrador
-      </button>
+    <!-- Selección inicial de tipo de usuario -->
+    <div *ngIf="!mostrarFormulario" class="seleccion-tipo">
+      <h2>¿Cómo deseas registrarte?</h2>
+      <p class="subtitulo">Selecciona el tipo de cuenta que deseas crear</p>
+      
+      <div class="tipo-cards">
+        <!-- Botón Paciente -->
+        <button 
+          type="button"
+          class="tipo-card"
+          (click)="seleccionarTipo('paciente')"
+        >
+          <div class="tipo-imagen">
+            <img src="https://cdn-icons-png.flaticon.com/512/2785/2785482.png" alt="Paciente" />
+          </div>
+          <h3>Paciente</h3>
+          <p>Registrate para solicitar turnos y acceder a tus historias clínicas</p>
+        </button>
+        
+        <!-- Botón Especialista -->
+        <button 
+          type="button"
+          class="tipo-card"
+          (click)="seleccionarTipo('especialista')"
+        >
+          <div class="tipo-imagen">
+            <img src="https://cdn-icons-png.flaticon.com/512/2785/2785490.png" alt="Especialista" />
+          </div>
+          <h3>Especialista</h3>
+          <p>Registrate para gestionar tus turnos y atender pacientes</p>
+        </button>
+      </div>
+
+      <!-- Botón Admin (solo si es admin) -->
+      <div *ngIf="esAdmin" class="admin-option">
+        <button 
+          type="button"
+          class="admin-button"
+          (click)="seleccionarTipo('administrador')"
+        >
+          <span class="admin-icon">👨‍💼</span>
+          <span>Registrar Administrador</span>
+        </button>
+      </div>
+
+      <!-- Link para volver al login -->
+      <div class="login-link">
+        <p>¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
+      </div>
     </div>
 
-    <!-- Formulario de Paciente -->
-    <form *ngIf="tipoUsuario === 'paciente'" [formGroup]="formPaciente" (ngSubmit)="registrarPaciente()">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="nombre">Nombre *</label>
-          <input 
-            type="text" 
-            id="nombre" 
-            formControlName="nombre"
-            placeholder="Ingresa tu nombre"
-          />
-          <div *ngIf="formPaciente.get('nombre')?.invalid && formPaciente.get('nombre')?.touched" class="error-message">
-            El nombre es requerido
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="apellido">Apellido *</label>
-          <input 
-            type="text" 
-            id="apellido" 
-            formControlName="apellido"
-            placeholder="Ingresa tu apellido"
-          />
-          <div *ngIf="formPaciente.get('apellido')?.invalid && formPaciente.get('apellido')?.touched" class="error-message">
-            El apellido es requerido
-          </div>
-        </div>
+    <!-- Formularios -->
+    <div *ngIf="mostrarFormulario">
+      <div class="form-header">
+        <button type="button" class="btn-volver" (click)="volverASeleccion()">
+          ← Volver
+        </button>
+        <h2>Registro de {{ tipoUsuario === 'paciente' ? 'Paciente' : tipoUsuario === 'especialista' ? 'Especialista' : 'Administrador' }}</h2>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="edad">Edad *</label>
-          <input 
-            type="number" 
-            id="edad" 
-            formControlName="edad"
-            placeholder="Ingresa tu edad"
-            min="0" 
-            max="120"
-          />
-          <div *ngIf="formPaciente.get('edad')?.invalid && formPaciente.get('edad')?.touched" class="error-message">
-            <span *ngIf="formPaciente.get('edad')?.errors?.['required']">La edad es requerida</span>
-            <span *ngIf="formPaciente.get('edad')?.errors?.['edadInvalida']">La edad debe estar entre 0 y 120 años</span>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="dni">DNI *</label>
-          <input 
-            type="text" 
-            id="dni" 
-            formControlName="dni"
-            placeholder="Ingresa tu DNI"
-            maxlength="8"
-          />
-          <div *ngIf="formPaciente.get('dni')?.invalid && formPaciente.get('dni')?.touched" class="error-message">
-            <span *ngIf="formPaciente.get('dni')?.errors?.['required']">El DNI es requerido</span>
-            <span *ngIf="formPaciente.get('dni')?.errors?.['dniInvalido']">El DNI debe tener 7 u 8 dígitos</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="obraSocial">Obra Social *</label>
-        <input 
-          type="text" 
-          id="obraSocial" 
-          formControlName="obraSocial"
-          placeholder="Ingresa tu obra social"
-        />
-        <div *ngIf="formPaciente.get('obraSocial')?.invalid && formPaciente.get('obraSocial')?.touched" class="error-message">
-          La obra social es requerida
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="email">Email *</label>
-        <input 
-          type="email" 
-          id="email" 
-          formControlName="email"
-          placeholder="Ingresa tu email"
-        />
-        <div *ngIf="formPaciente.get('email')?.invalid && formPaciente.get('email')?.touched" class="error-message">
-          <span *ngIf="formPaciente.get('email')?.errors?.['required']">El email es requerido</span>
-          <span *ngIf="formPaciente.get('email')?.errors?.['emailInvalido']">Ingresa un email válido</span>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="password">Contraseña *</label>
-          <input 
-            type="password" 
-            id="password" 
-            formControlName="password"
-            placeholder="Ingresa tu contraseña"
-          />
-          <div *ngIf="formPaciente.get('password')?.invalid && formPaciente.get('password')?.touched" class="error-message">
-            <span *ngIf="formPaciente.get('password')?.errors?.['required']">La contraseña es requerida</span>
-            <span *ngIf="formPaciente.get('password')?.errors?.['passwordInvalida']">
-              La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
-            </span>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="confirmPassword">Confirmar Contraseña *</label>
-          <input 
-            type="password" 
-            id="confirmPassword" 
-            formControlName="confirmPassword"
-            placeholder="Confirma tu contraseña"
-          />
-          <div *ngIf="formPaciente.get('confirmPassword')?.invalid && formPaciente.get('confirmPassword')?.touched" class="error-message">
-            <span *ngIf="formPaciente.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña</span>
-            <span *ngIf="formPaciente.get('confirmPassword')?.errors?.['passwordNoCoincide']">Las contraseñas no coinciden</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Imagen de Perfil 1 *</label>
-          <div class="upload-container">
-            <div class="upload-area" [class.has-image]="imagenPerfil1Preview">
-              <div *ngIf="!imagenPerfil1Preview" class="upload-placeholder">
-                <i class="upload-icon">📷</i>
-                <p>Imagen de perfil principal</p>
-                <small>Haz clic para seleccionar</small>
-              </div>
-              
-              <div *ngIf="imagenPerfil1Preview" class="image-preview">
-                <img [src]="imagenPerfil1Preview" alt="Imagen de perfil 1" />
-                <button 
-                  type="button" 
-                  class="remove-btn" 
-                  (click)="removerImagen('perfil1')"
-                  title="Eliminar imagen"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            
-            <input 
-              #fileInput1
-              type="file" 
-              accept="image/*"
-              (change)="onImagenSeleccionada($event, 'perfil1')"
-              style="display: none;"
-            />
-            
-            <button 
-              type="button" 
-              class="btn-upload"
-              (click)="fileInput1.click()"
-            >
-              Subir Foto
-            </button>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label>Imagen de Perfil 2</label>
-          <div class="upload-container">
-            <div class="upload-area" [class.has-image]="imagenPerfil2Preview">
-              <div *ngIf="!imagenPerfil2Preview" class="upload-placeholder">
-                <i class="upload-icon">📷</i>
-                <p>Imagen de perfil secundaria</p>
-                <small>Haz clic para seleccionar</small>
-              </div>
-              
-              <div *ngIf="imagenPerfil2Preview" class="image-preview">
-                <img [src]="imagenPerfil2Preview" alt="Imagen de perfil 2" />
-                <button 
-                  type="button" 
-                  class="remove-btn" 
-                  (click)="removerImagen('perfil2')"
-                  title="Eliminar imagen"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            
-            <input 
-              #fileInput2
-              type="file" 
-              accept="image/*"
-              (change)="onImagenSeleccionada($event, 'perfil2')"
-              style="display: none;"
-            />
-            
-            <button 
-              type="button" 
-              class="btn-upload"
-              (click)="fileInput2.click()"
-            >
-              Subir Foto
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- CAPTCHA PROPIO SIMPLE -->
-      <div class="captcha-container" style="margin-bottom: 1rem;">
-        <label><strong>{{ captchaPregunta }}</strong></label>
-        <input type="text" [(ngModel)]="captchaRespuesta" name="captcha" required style="margin-left: 0.5rem; width: 60px;" />
-      </div>
-
-      <button 
-        type="submit" 
-        [disabled]="formPaciente.invalid || isLoading"
-        class="btn-registrar"
-      >
-        <span *ngIf="isLoading">Registrando...</span>
-        <span *ngIf="!isLoading">Registrar Paciente</span>
-      </button>
-    </form>
-
-    <!-- Formulario de Especialista -->
-    <form *ngIf="tipoUsuario === 'especialista'" [formGroup]="formEspecialista" (ngSubmit)="registrarEspecialista()">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="nombreEsp">Nombre *</label>
-          <input 
-            type="text" 
-            id="nombreEsp" 
-            formControlName="nombre"
-            placeholder="Ingresa tu nombre"
-          />
-          <div *ngIf="formEspecialista.get('nombre')?.invalid && formEspecialista.get('nombre')?.touched" class="error-message">
-            El nombre es requerido
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="apellidoEsp">Apellido *</label>
-          <input 
-            type="text" 
-            id="apellidoEsp" 
-            formControlName="apellido"
-            placeholder="Ingresa tu apellido"
-          />
-          <div *ngIf="formEspecialista.get('apellido')?.invalid && formEspecialista.get('apellido')?.touched" class="error-message">
-            El apellido es requerido
-          </div>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="edadEsp">Edad *</label>
-          <input 
-            type="number" 
-            id="edadEsp" 
-            formControlName="edad"
-            placeholder="Ingresa tu edad"
-            min="0" 
-            max="120"
-          />
-          <div *ngIf="formEspecialista.get('edad')?.invalid && formEspecialista.get('edad')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('edad')?.errors?.['required']">La edad es requerida</span>
-            <span *ngIf="formEspecialista.get('edad')?.errors?.['edadInvalida']">La edad debe estar entre 0 y 120 años</span>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="dniEsp">DNI *</label>
-          <input 
-            type="text" 
-            id="dniEsp" 
-            formControlName="dni"
-            placeholder="Ingresa tu DNI"
-            maxlength="8"
-          />
-          <div *ngIf="formEspecialista.get('dni')?.invalid && formEspecialista.get('dni')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('dni')?.errors?.['required']">El DNI es requerido</span>
-            <span *ngIf="formEspecialista.get('dni')?.errors?.['dniInvalido']">El DNI debe tener 7 u 8 dígitos</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="especialidad">Especialidad *</label>
-        <div class="especialidad-container">
-          <select 
-            id="especialidad" 
-            formControlName="especialidad"
-            (change)="onEspecialidadChange($event)"
-          >
-            <option value="">Selecciona una especialidad</option>
-            <option value="nueva">Agregar nueva especialidad</option>
-            <option *ngFor="let esp of especialidades" [value]="esp.nombre">
-              {{ esp.nombre }}
-            </option>
-          </select>
-          
-          <div *ngIf="mostrarNuevaEspecialidad" class="nueva-especialidad">
+      <!-- Formulario de Paciente -->
+      <form *ngIf="tipoUsuario === 'paciente'" [formGroup]="formPaciente" (ngSubmit)="registrarPaciente()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombre">Nombre *</label>
             <input 
               type="text" 
-              formControlName="nuevaEspecialidad"
-              placeholder="Ingresa el nombre de la nueva especialidad"
+              id="nombre" 
+              formControlName="nombre"
+              placeholder="Ingresa tu nombre"
             />
+            <div *ngIf="formPaciente.get('nombre')?.invalid && formPaciente.get('nombre')?.touched" class="error-message">
+              El nombre es requerido
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="apellido">Apellido *</label>
+            <input 
+              type="text" 
+              id="apellido" 
+              formControlName="apellido"
+              placeholder="Ingresa tu apellido"
+            />
+            <div *ngIf="formPaciente.get('apellido')?.invalid && formPaciente.get('apellido')?.touched" class="error-message">
+              El apellido es requerido
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edad">Edad *</label>
+            <input 
+              type="number" 
+              id="edad" 
+              formControlName="edad"
+              placeholder="Ingresa tu edad"
+              min="0" 
+              max="120"
+            />
+            <div *ngIf="formPaciente.get('edad')?.invalid && formPaciente.get('edad')?.touched" class="error-message">
+              <span *ngIf="formPaciente.get('edad')?.errors?.['required']">La edad es requerida</span>
+              <span *ngIf="formPaciente.get('edad')?.errors?.['edadInvalida']">La edad debe estar entre 0 y 120 años</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="dni">DNI *</label>
+            <input 
+              type="text" 
+              id="dni" 
+              formControlName="dni"
+              placeholder="Ingresa tu DNI"
+              maxlength="8"
+            />
+            <div *ngIf="formPaciente.get('dni')?.invalid && formPaciente.get('dni')?.touched" class="error-message">
+              <span *ngIf="formPaciente.get('dni')?.errors?.['required']">El DNI es requerido</span>
+              <span *ngIf="formPaciente.get('dni')?.errors?.['dniInvalido']">El DNI debe tener 7 u 8 dígitos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="obraSocial">Obra Social *</label>
+          <input 
+            type="text" 
+            id="obraSocial" 
+            formControlName="obraSocial"
+            placeholder="Ingresa tu obra social"
+          />
+          <div *ngIf="formPaciente.get('obraSocial')?.invalid && formPaciente.get('obraSocial')?.touched" class="error-message">
+            La obra social es requerida
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email"
+            placeholder="Ingresa tu email"
+          />
+          <div *ngIf="formPaciente.get('email')?.invalid && formPaciente.get('email')?.touched" class="error-message">
+            <span *ngIf="formPaciente.get('email')?.errors?.['required']">El email es requerido</span>
+            <span *ngIf="formPaciente.get('email')?.errors?.['emailInvalido']">Ingresa un email válido</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Contraseña *</label>
+            <input 
+              type="password" 
+              id="password" 
+              formControlName="password"
+              placeholder="Ingresa tu contraseña"
+            />
+            <div *ngIf="formPaciente.get('password')?.invalid && formPaciente.get('password')?.touched" class="error-message">
+              <span *ngIf="formPaciente.get('password')?.errors?.['required']">La contraseña es requerida</span>
+              <span *ngIf="formPaciente.get('password')?.errors?.['passwordInvalida']">
+                La contraseña debe tener al menos 6 caracteres
+              </span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirmPassword">Confirmar Contraseña *</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              formControlName="confirmPassword"
+              placeholder="Confirma tu contraseña"
+            />
+            <div *ngIf="formPaciente.get('confirmPassword')?.invalid && formPaciente.get('confirmPassword')?.touched" class="error-message">
+              <span *ngIf="formPaciente.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña</span>
+              <span *ngIf="formPaciente.get('confirmPassword')?.errors?.['passwordNoCoincide']">Las contraseñas no coinciden</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Imagen de Perfil 1 *</label>
+            <div class="upload-container">
+              <div class="upload-area" [class.has-image]="imagenPerfil1Preview">
+                <div *ngIf="!imagenPerfil1Preview" class="upload-placeholder">
+                  <i class="upload-icon">📷</i>
+                  <p>Imagen de perfil principal</p>
+                  <small>Haz clic para seleccionar</small>
+                </div>
+                
+                <div *ngIf="imagenPerfil1Preview" class="image-preview">
+                  <img [src]="imagenPerfil1Preview" alt="Imagen de perfil 1" />
+                  <button 
+                    type="button" 
+                    class="remove-btn" 
+                    (click)="removerImagen('perfil1')"
+                    title="Eliminar imagen"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              
+              <input 
+                #fileInput1
+                type="file" 
+                accept="image/*"
+                (change)="onImagenSeleccionada($event, 'perfil1')"
+                style="display: none;"
+              />
+              
+              <button 
+                type="button" 
+                class="btn-upload"
+                (click)="fileInput1.click()"
+              >
+                Subir Foto
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Imagen de Perfil 2</label>
+            <div class="upload-container">
+              <div class="upload-area" [class.has-image]="imagenPerfil2Preview">
+                <div *ngIf="!imagenPerfil2Preview" class="upload-placeholder">
+                  <i class="upload-icon">📷</i>
+                  <p>Imagen de perfil secundaria</p>
+                  <small>Haz clic para seleccionar</small>
+                </div>
+                
+                <div *ngIf="imagenPerfil2Preview" class="image-preview">
+                  <img [src]="imagenPerfil2Preview" alt="Imagen de perfil 2" />
+                  <button 
+                    type="button" 
+                    class="remove-btn" 
+                    (click)="removerImagen('perfil2')"
+                    title="Eliminar imagen"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              
+              <input 
+                #fileInput2
+                type="file" 
+                accept="image/*"
+                (change)="onImagenSeleccionada($event, 'perfil2')"
+                style="display: none;"
+              />
+              
+              <button 
+                type="button" 
+                class="btn-upload"
+                (click)="fileInput2.click()"
+              >
+                Subir Foto
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CAPTCHA PROPIO SIMPLE -->
+        <div class="captcha-container" style="margin-bottom: 1rem;">
+          <label><strong>{{ captchaPregunta }}</strong></label>
+          <input type="text" [(ngModel)]="captchaRespuesta" name="captcha" required style="margin-left: 0.5rem; width: 60px;" />
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="formPaciente.invalid || isLoading"
+          class="btn-registrar"
+        >
+          <span *ngIf="isLoading">Registrando...</span>
+          <span *ngIf="!isLoading">Registrar Paciente</span>
+        </button>
+      </form>
+
+      <!-- Formulario de Especialista -->
+      <form *ngIf="tipoUsuario === 'especialista'" [formGroup]="formEspecialista" (ngSubmit)="registrarEspecialista()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombreEsp">Nombre *</label>
+            <input 
+              type="text" 
+              id="nombreEsp" 
+              formControlName="nombre"
+              placeholder="Ingresa tu nombre"
+            />
+            <div *ngIf="formEspecialista.get('nombre')?.invalid && formEspecialista.get('nombre')?.touched" class="error-message">
+              El nombre es requerido
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="apellidoEsp">Apellido *</label>
+            <input 
+              type="text" 
+              id="apellidoEsp" 
+              formControlName="apellido"
+              placeholder="Ingresa tu apellido"
+            />
+            <div *ngIf="formEspecialista.get('apellido')?.invalid && formEspecialista.get('apellido')?.touched" class="error-message">
+              El apellido es requerido
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edadEsp">Edad *</label>
+            <input 
+              type="number" 
+              id="edadEsp" 
+              formControlName="edad"
+              placeholder="Ingresa tu edad"
+              min="0" 
+              max="120"
+            />
+            <div *ngIf="formEspecialista.get('edad')?.invalid && formEspecialista.get('edad')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('edad')?.errors?.['required']">La edad es requerida</span>
+              <span *ngIf="formEspecialista.get('edad')?.errors?.['edadInvalida']">La edad debe estar entre 0 y 120 años</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="dniEsp">DNI *</label>
+            <input 
+              type="text" 
+              id="dniEsp" 
+              formControlName="dni"
+              placeholder="Ingresa tu DNI"
+              maxlength="8"
+            />
+            <div *ngIf="formEspecialista.get('dni')?.invalid && formEspecialista.get('dni')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('dni')?.errors?.['required']">El DNI es requerido</span>
+              <span *ngIf="formEspecialista.get('dni')?.errors?.['dniInvalido']">El DNI debe tener 7 u 8 dígitos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="especialidad">Especialidad *</label>
+          <div class="especialidad-container">
+            <select 
+              id="especialidad" 
+              formControlName="especialidad"
+              (change)="onEspecialidadChange($event)"
+            >
+              <option value="">Selecciona una especialidad</option>
+              <option value="nueva">Agregar nueva especialidad</option>
+              <option *ngFor="let esp of especialidades" [value]="esp.nombre">
+                {{ esp.nombre }}
+              </option>
+            </select>
+            
+            <div *ngIf="mostrarNuevaEspecialidad" class="nueva-especialidad">
+              <input 
+                type="text" 
+                formControlName="nuevaEspecialidad"
+                placeholder="Ingresa el nombre de la nueva especialidad"
+              />
+              <button 
+                type="button" 
+                (click)="agregarEspecialidad()"
+                [disabled]="!formEspecialista.get('nuevaEspecialidad')?.valid"
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+          <div *ngIf="formEspecialista.get('especialidad')?.invalid && formEspecialista.get('especialidad')?.touched" class="error-message">
+            La especialidad es requerida
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="emailEsp">Email *</label>
+          <input 
+            type="email" 
+            id="emailEsp" 
+            formControlName="email"
+            placeholder="Ingresa tu email"
+          />
+          <div *ngIf="formEspecialista.get('email')?.invalid && formEspecialista.get('email')?.touched" class="error-message">
+            <span *ngIf="formEspecialista.get('email')?.errors?.['required']">El email es requerido</span>
+            <span *ngIf="formEspecialista.get('email')?.errors?.['emailInvalido']">Ingresa un email válido</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="passwordEsp">Contraseña *</label>
+            <input 
+              type="password" 
+              id="passwordEsp" 
+              formControlName="password"
+              placeholder="Ingresa tu contraseña"
+            />
+            <div *ngIf="formEspecialista.get('password')?.invalid && formEspecialista.get('password')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('password')?.errors?.['required']">La contraseña es requerida</span>
+              <span *ngIf="formEspecialista.get('password')?.errors?.['passwordInvalida']">
+                La contraseña debe tener al menos 6 caracteres
+              </span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirmPasswordEsp">Confirmar Contraseña *</label>
+            <input 
+              type="password" 
+              id="confirmPasswordEsp" 
+              formControlName="confirmPassword"
+              placeholder="Confirma tu contraseña"
+            />
+            <div *ngIf="formEspecialista.get('confirmPassword')?.invalid && formEspecialista.get('confirmPassword')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña</span>
+              <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['passwordNoCoincide']">Las contraseñas no coinciden</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Imagen de Perfil *</label>
+          <div class="upload-container">
+            <div class="upload-area" [class.has-image]="imagenPerfilEspPreview">
+              <div *ngIf="!imagenPerfilEspPreview" class="upload-placeholder">
+                <i class="upload-icon">📷</i>
+                <p>Imagen de perfil</p>
+                <small>Haz clic para seleccionar</small>
+              </div>
+              
+              <div *ngIf="imagenPerfilEspPreview" class="image-preview">
+                <img [src]="imagenPerfilEspPreview" alt="Imagen de perfil" />
+                <button 
+                  type="button" 
+                  class="remove-btn" 
+                  (click)="removerImagen('especialista')"
+                  title="Eliminar imagen"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            
+            <input 
+              #fileInputEsp
+              type="file" 
+              accept="image/*"
+              (change)="onImagenSeleccionada($event, 'especialista')"
+              style="display: none;"
+            />
+            
             <button 
               type="button" 
-              (click)="agregarEspecialidad()"
-              [disabled]="!formEspecialista.get('nuevaEspecialidad')?.valid"
+              class="btn-upload"
+              (click)="fileInputEsp.click()"
             >
-              Agregar
+              Subir Foto
             </button>
           </div>
         </div>
-        <div *ngIf="formEspecialista.get('especialidad')?.invalid && formEspecialista.get('especialidad')?.touched" class="error-message">
-          La especialidad es requerida
-        </div>
-      </div>
 
-      <div class="form-group">
-        <label for="emailEsp">Email *</label>
-        <input 
-          type="email" 
-          id="emailEsp" 
-          formControlName="email"
-          placeholder="Ingresa tu email"
-        />
-        <div *ngIf="formEspecialista.get('email')?.invalid && formEspecialista.get('email')?.touched" class="error-message">
-          <span *ngIf="formEspecialista.get('email')?.errors?.['required']">El email es requerido</span>
-          <span *ngIf="formEspecialista.get('email')?.errors?.['emailInvalido']">Ingresa un email válido</span>
+        <!-- CAPTCHA PROPIO SIMPLE -->
+        <div class="captcha-container" style="margin-bottom: 1rem;">
+          <label><strong>{{ captchaPregunta }}</strong></label>
+          <input type="text" [(ngModel)]="captchaRespuesta" name="captcha" required style="margin-left: 0.5rem; width: 60px;" />
         </div>
-      </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="passwordEsp">Contraseña *</label>
-          <input 
-            type="password" 
-            id="passwordEsp" 
-            formControlName="password"
-            placeholder="Ingresa tu contraseña"
-          />
-          <div *ngIf="formEspecialista.get('password')?.invalid && formEspecialista.get('password')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('password')?.errors?.['required']">La contraseña es requerida</span>
-            <span *ngIf="formEspecialista.get('password')?.errors?.['passwordInvalida']">
-              La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
-            </span>
+        <button 
+          type="submit" 
+          [disabled]="formEspecialista.invalid || isLoading"
+          class="btn-registrar"
+        >
+          <span *ngIf="isLoading">Registrando...</span>
+          <span *ngIf="!isLoading">Registrar Especialista</span>
+        </button>
+      </form>
+
+      <!-- Formulario de Administrador -->
+      <form *ngIf="tipoUsuario === 'administrador'" [formGroup]="formEspecialista" (ngSubmit)="registrarAdministrador()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="nombreAdmin">Nombre *</label>
+            <input 
+              type="text" 
+              id="nombreAdmin" 
+              formControlName="nombre"
+              placeholder="Ingresa tu nombre"
+            />
+            <div *ngIf="formEspecialista.get('nombre')?.invalid && formEspecialista.get('nombre')?.touched" class="error-message">
+              El nombre es requerido
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="apellidoAdmin">Apellido *</label>
+            <input 
+              type="text" 
+              id="apellidoAdmin" 
+              formControlName="apellido"
+              placeholder="Ingresa tu apellido"
+            />
+            <div *ngIf="formEspecialista.get('apellido')?.invalid && formEspecialista.get('apellido')?.touched" class="error-message">
+              El apellido es requerido
+            </div>
           </div>
         </div>
-        
-        <div class="form-group">
-          <label for="confirmPasswordEsp">Confirmar Contraseña *</label>
-          <input 
-            type="password" 
-            id="confirmPasswordEsp" 
-            formControlName="confirmPassword"
-            placeholder="Confirma tu contraseña"
-          />
-          <div *ngIf="formEspecialista.get('confirmPassword')?.invalid && formEspecialista.get('confirmPassword')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña</span>
-            <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['passwordNoCoincide']">Las contraseñas no coinciden</span>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edadAdmin">Edad *</label>
+            <input 
+              type="number" 
+              id="edadAdmin" 
+              formControlName="edad"
+              placeholder="Ingresa tu edad"
+              min="0" 
+              max="120"
+            />
+            <div *ngIf="formEspecialista.get('edad')?.invalid && formEspecialista.get('edad')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('edad')?.errors?.['required']">La edad es requerida</span>
+              <span *ngIf="formEspecialista.get('edad')?.errors?.['edadInvalida']">La edad debe estar entre 0 y 120 años</span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="dniAdmin">DNI *</label>
+            <input 
+              type="text" 
+              id="dniAdmin" 
+              formControlName="dni"
+              placeholder="Ingresa tu DNI"
+              maxlength="8"
+            />
+            <div *ngIf="formEspecialista.get('dni')?.invalid && formEspecialista.get('dni')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('dni')?.errors?.['required']">El DNI es requerido</span>
+              <span *ngIf="formEspecialista.get('dni')?.errors?.['dniInvalido']">El DNI debe tener 7 u 8 dígitos</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Imagen de Perfil *</label>
-        <div class="upload-container">
-          <div class="upload-area" [class.has-image]="imagenPerfilEspPreview">
-            <div *ngIf="!imagenPerfilEspPreview" class="upload-placeholder">
-              <i class="upload-icon">📷</i>
-              <p>Imagen de perfil</p>
-              <small>Haz clic para seleccionar</small>
+        <div class="form-group">
+          <label for="emailAdmin">Email *</label>
+          <input 
+            type="email" 
+            id="emailAdmin" 
+            formControlName="email"
+            placeholder="Ingresa tu email"
+          />
+          <div *ngIf="formEspecialista.get('email')?.invalid && formEspecialista.get('email')?.touched" class="error-message">
+            <span *ngIf="formEspecialista.get('email')?.errors?.['required']">El email es requerido</span>
+            <span *ngIf="formEspecialista.get('email')?.errors?.['emailInvalido']">Ingresa un email válido</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="passwordAdmin">Contraseña *</label>
+            <input 
+              type="password" 
+              id="passwordAdmin" 
+              formControlName="password"
+              placeholder="Ingresa tu contraseña"
+            />
+            <div *ngIf="formEspecialista.get('password')?.invalid && formEspecialista.get('password')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('password')?.errors?.['required']">La contraseña es requerida</span>
+              <span *ngIf="formEspecialista.get('password')?.errors?.['passwordInvalida']">
+                La contraseña debe tener al menos 6 caracteres
+              </span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="confirmPasswordAdmin">Confirmar Contraseña *</label>
+            <input 
+              type="password" 
+              id="confirmPasswordAdmin" 
+              formControlName="confirmPassword"
+              placeholder="Confirma tu contraseña"
+            />
+            <div *ngIf="formEspecialista.get('confirmPassword')?.invalid && formEspecialista.get('confirmPassword')?.touched" class="error-message">
+              <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña</span>
+              <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['passwordNoCoincide']">Las contraseñas no coinciden</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Imagen de Perfil *</label>
+          <div class="upload-container">
+            <div class="upload-area" [class.has-image]="imagenPerfilEspPreview">
+              <div *ngIf="!imagenPerfilEspPreview" class="upload-placeholder">
+                <i class="upload-icon">📷</i>
+                <p>Imagen de perfil</p>
+                <small>Haz clic para seleccionar</small>
+              </div>
+              
+              <div *ngIf="imagenPerfilEspPreview" class="image-preview">
+                <img [src]="imagenPerfilEspPreview" alt="Imagen de perfil" />
+                <button 
+                  type="button" 
+                  class="remove-btn" 
+                  (click)="removerImagen('especialista')"
+                  title="Eliminar imagen"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
             
-            <div *ngIf="imagenPerfilEspPreview" class="image-preview">
-              <img [src]="imagenPerfilEspPreview" alt="Imagen de perfil" />
-              <button 
-                type="button" 
-                class="remove-btn" 
-                (click)="removerImagen('especialista')"
-                title="Eliminar imagen"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-          
-          <input 
-            #fileInputEsp
-            type="file" 
-            accept="image/*"
-            (change)="onImagenSeleccionada($event, 'especialista')"
-            style="display: none;"
-          />
-          
-          <button 
-            type="button" 
-            class="btn-upload"
-            (click)="fileInputEsp.click()"
-          >
-            Subir Foto
-          </button>
-        </div>
-      </div>
-
-      <!-- CAPTCHA PROPIO SIMPLE -->
-      <div class="captcha-container" style="margin-bottom: 1rem;">
-        <label><strong>{{ captchaPregunta }}</strong></label>
-        <input type="text" [(ngModel)]="captchaRespuesta" name="captcha" required style="margin-left: 0.5rem; width: 60px;" />
-      </div>
-
-      <button 
-        type="submit" 
-        [disabled]="formEspecialista.invalid || isLoading"
-        class="btn-registrar"
-      >
-        <span *ngIf="isLoading">Registrando...</span>
-        <span *ngIf="!isLoading">Registrar Especialista</span>
-      </button>
-    </form>
-
-    <!-- Formulario de Administrador -->
-    <form *ngIf="tipoUsuario === 'administrador'" [formGroup]="formEspecialista" (ngSubmit)="registrarAdministrador()">
-      <div class="form-row">
-        <div class="form-group">
-          <label for="nombreAdmin">Nombre *</label>
-          <input 
-            type="text" 
-            id="nombreAdmin" 
-            formControlName="nombre"
-            placeholder="Ingresa tu nombre"
-          />
-          <div *ngIf="formEspecialista.get('nombre')?.invalid && formEspecialista.get('nombre')?.touched" class="error-message">
-            El nombre es requerido
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="apellidoAdmin">Apellido *</label>
-          <input 
-            type="text" 
-            id="apellidoAdmin" 
-            formControlName="apellido"
-            placeholder="Ingresa tu apellido"
-          />
-          <div *ngIf="formEspecialista.get('apellido')?.invalid && formEspecialista.get('apellido')?.touched" class="error-message">
-            El apellido es requerido
-          </div>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="edadAdmin">Edad *</label>
-          <input 
-            type="number" 
-            id="edadAdmin" 
-            formControlName="edad"
-            placeholder="Ingresa tu edad"
-            min="0" 
-            max="120"
-          />
-          <div *ngIf="formEspecialista.get('edad')?.invalid && formEspecialista.get('edad')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('edad')?.errors?.['required']">La edad es requerida</span>
-            <span *ngIf="formEspecialista.get('edad')?.errors?.['edadInvalida']">La edad debe estar entre 0 y 120 años</span>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="dniAdmin">DNI *</label>
-          <input 
-            type="text" 
-            id="dniAdmin" 
-            formControlName="dni"
-            placeholder="Ingresa tu DNI"
-            maxlength="8"
-          />
-          <div *ngIf="formEspecialista.get('dni')?.invalid && formEspecialista.get('dni')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('dni')?.errors?.['required']">El DNI es requerido</span>
-            <span *ngIf="formEspecialista.get('dni')?.errors?.['dniInvalido']">El DNI debe tener 7 u 8 dígitos</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="emailAdmin">Email *</label>
-        <input 
-          type="email" 
-          id="emailAdmin" 
-          formControlName="email"
-          placeholder="Ingresa tu email"
-        />
-        <div *ngIf="formEspecialista.get('email')?.invalid && formEspecialista.get('email')?.touched" class="error-message">
-          <span *ngIf="formEspecialista.get('email')?.errors?.['required']">El email es requerido</span>
-          <span *ngIf="formEspecialista.get('email')?.errors?.['emailInvalido']">Ingresa un email válido</span>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="passwordAdmin">Contraseña *</label>
-          <input 
-            type="password" 
-            id="passwordAdmin" 
-            formControlName="password"
-            placeholder="Ingresa tu contraseña"
-          />
-          <div *ngIf="formEspecialista.get('password')?.invalid && formEspecialista.get('password')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('password')?.errors?.['required']">La contraseña es requerida</span>
-            <span *ngIf="formEspecialista.get('password')?.errors?.['passwordInvalida']">
-              La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número
-            </span>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="confirmPasswordAdmin">Confirmar Contraseña *</label>
-          <input 
-            type="password" 
-            id="confirmPasswordAdmin" 
-            formControlName="confirmPassword"
-            placeholder="Confirma tu contraseña"
-          />
-          <div *ngIf="formEspecialista.get('confirmPassword')?.invalid && formEspecialista.get('confirmPassword')?.touched" class="error-message">
-            <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['required']">Confirma tu contraseña</span>
-            <span *ngIf="formEspecialista.get('confirmPassword')?.errors?.['passwordNoCoincide']">Las contraseñas no coinciden</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Imagen de Perfil *</label>
-        <div class="upload-container">
-          <div class="upload-area" [class.has-image]="imagenPerfilEspPreview">
-            <div *ngIf="!imagenPerfilEspPreview" class="upload-placeholder">
-              <i class="upload-icon">📷</i>
-              <p>Imagen de perfil</p>
-              <small>Haz clic para seleccionar</small>
-            </div>
+            <input 
+              #fileInputAdmin
+              type="file" 
+              accept="image/*"
+              (change)="onImagenSeleccionada($event, 'especialista')"
+              style="display: none;"
+            />
             
-            <div *ngIf="imagenPerfilEspPreview" class="image-preview">
-              <img [src]="imagenPerfilEspPreview" alt="Imagen de perfil" />
-              <button 
-                type="button" 
-                class="remove-btn" 
-                (click)="removerImagen('especialista')"
-                title="Eliminar imagen"
-              >
-                ✕
-              </button>
-            </div>
+            <button 
+              type="button" 
+              class="btn-upload"
+              (click)="fileInputAdmin.click()"
+            >
+              Subir Foto
+            </button>
           </div>
-          
-          <input 
-            #fileInputAdmin
-            type="file" 
-            accept="image/*"
-            (change)="onImagenSeleccionada($event, 'especialista')"
-            style="display: none;"
-          />
-          
-          <button 
-            type="button" 
-            class="btn-upload"
-            (click)="fileInputAdmin.click()"
-          >
-            Subir Foto
-          </button>
         </div>
+
+        <!-- CAPTCHA PROPIO SIMPLE -->
+        <div class="captcha-container" style="margin-bottom: 1rem;">
+          <label><strong>{{ captchaPregunta }}</strong></label>
+          <input type="text" [(ngModel)]="captchaRespuesta" name="captcha" required style="margin-left: 0.5rem; width: 60px;" />
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="formEspecialista.invalid || isLoading"
+          class="btn-registrar"
+        >
+          <span *ngIf="isLoading">Registrando...</span>
+          <span *ngIf="!isLoading">Registrar Administrador</span>
+        </button>
+      </form>
+
+      <!-- Mensajes de éxito/error -->
+      <div *ngIf="mensaje" [class]="'mensaje ' + (esExito ? 'exito' : 'error')">
+        {{ mensaje }}
       </div>
-
-      <!-- CAPTCHA PROPIO SIMPLE -->
-      <div class="captcha-container" style="margin-bottom: 1rem;">
-        <label><strong>{{ captchaPregunta }}</strong></label>
-        <input type="text" [(ngModel)]="captchaRespuesta" name="captcha" required style="margin-left: 0.5rem; width: 60px;" />
-      </div>
-
-      <button 
-        type="submit" 
-        [disabled]="formEspecialista.invalid || isLoading"
-        class="btn-registrar"
-      >
-        <span *ngIf="isLoading">Registrando...</span>
-        <span *ngIf="!isLoading">Registrar Administrador</span>
-      </button>
-    </form>
-
-    <!-- Mensajes de éxito/error -->
-    <div *ngIf="mensaje" [class]="'mensaje ' + (esExito ? 'exito' : 'error')">
-      {{ mensaje }}
     </div>
   </div>
 </div>

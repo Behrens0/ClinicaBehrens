@@ -1,1 +1,164 @@
-/* You can add global styles to this file, and also import other style files */
+/* Estilos Globales - Clínica Behrens */
+
+/* Reset y base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  /* Fondo sutil y profesional para clínica */
+  background: 
+    /* Patrón sutil de cruces médicas */
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 60px,
+      rgba(102, 126, 234, 0.02) 60px,
+      rgba(102, 126, 234, 0.02) 61px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 60px,
+      rgba(102, 126, 234, 0.02) 60px,
+      rgba(102, 126, 234, 0.02) 61px
+    ),
+    /* Gradiente base suave */
+    linear-gradient(135deg, 
+      #f5f7fa 0%, 
+      #e8ecf3 25%,
+      #f0f4f8 50%,
+      #e8ecf3 75%,
+      #f5f7fa 100%
+    );
+  
+  background-attachment: fixed;
+  background-size: 100% 100%;
+  
+  /* Colores de texto */
+  color: #333;
+  line-height: 1.6;
+  
+  /* Suavizado de fuentes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Asegurar que los contenedores ocupen el espacio completo */
+app-root {
+  min-height: 100vh;
+  display: block;
+}
+
+/* Estilos para scrollbar (navegadores webkit) */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea, #764ba2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #5568d3, #653a8a);
+}
+
+/* Transiciones suaves globales */
+a, button {
+  transition: all 0.3s ease;
+}
+
+/* Links por defecto */
+a {
+  color: #667eea;
+  text-decoration: none;
+  
+  &:hover {
+    color: #764ba2;
+  }
+}
+
+/* Botones por defecto */
+button {
+  cursor: pointer;
+  font-family: inherit;
+  
+  &:focus {
+    outline: 2px solid rgba(102, 126, 234, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+/* Inputs por defecto */
+input, select, textarea {
+  font-family: inherit;
+  
+  &:focus {
+    outline: 2px solid rgba(102, 126, 234, 0.5);
+    outline-offset: 1px;
+  }
+}
+
+/* Animación de carga global */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Utilidades comunes */
+.text-center {
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Sombras consistentes */
+.shadow-sm {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.shadow {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .container {
+    padding: 0 15px;
+  }
+}

@@ -212,6 +212,11 @@ export class MisTurnosEspecialistaComponent implements OnInit {
   }
   
   async confirmarFinalizacion() {
+    console.log('🟢 [MisTurnosEspecialista] === INICIO FINALIZACIÓN DE TURNO ===');
+    console.log('📋 [MisTurnosEspecialista] Turno a operar:', this.turnoAOperar);
+    console.log('📋 [MisTurnosEspecialista] ID del turno:', this.turnoAOperar?.id);
+    console.log('📋 [MisTurnosEspecialista] Reseña final:', this.resenaFinal);
+    
     this.errorHistoriaClinica = '';
     this.errorMotivo = '';
     
@@ -220,19 +225,45 @@ export class MisTurnosEspecialistaComponent implements OnInit {
     const temperaturaStr = this.temperatura !== undefined && this.temperatura !== null ? String(this.temperatura) : '';
     const presionStr = this.presion !== undefined && this.presion !== null ? String(this.presion) : '';
     
+    console.log('📊 [MisTurnosEspecialista] Datos de historia clínica:', {
+      altura: alturaStr,
+      peso: pesoStr,
+      temperatura: temperaturaStr,
+      presion: presionStr,
+      datosDinamicos: this.datosDinamicos
+    });
+    
     if (!alturaStr.trim() || !pesoStr.trim() || !temperaturaStr.trim() || !presionStr.trim()) {
+      console.error('❌ [MisTurnosEspecialista] Validación fallida: Faltan datos fijos');
       this.errorHistoriaClinica = 'Debes completar todos los datos fijos de la historia clínica.';
       return;
     }
     
     if (!this.resenaFinal || !String(this.resenaFinal).trim()) {
+      console.error('❌ [MisTurnosEspecialista] Validación fallida: Falta reseña');
       this.errorMotivo = 'Debes ingresar una reseña o comentario.';
       return;
     }
     
     try {
+      console.log('⏳ [MisTurnosEspecialista] Paso 1: Finalizando turno...');
       // Finalizar turno con reseña
-      await this.turnosService.finalizarTurno(this.turnoAOperar.id, String(this.resenaFinal).trim());
+      const resultadoFinalizar = await this.turnosService.finalizarTurno(this.turnoAOperar.id, String(this.resenaFinal).trim());
+      console.log('✅ [MisTurnosEspecialista] Turno finalizado:', resultadoFinalizar);
+      
+      console.log('⏳ [MisTurnosEspecialista] Paso 2: Creando historia clínica...');
+      
+      // Parsear campos numéricos
+      const alturaParsed = parseFloat(alturaStr);
+      const pesoParsed = parseFloat(pesoStr);
+      const temperaturaParsed = parseFloat(temperaturaStr);
+      
+      console.log('🔢 [MisTurnosEspecialista] Valores parseados:', {
+        altura: alturaParsed,
+        peso: pesoParsed,
+        temperatura: temperaturaParsed,
+        presion: presionStr
+      });
       
       // Crear historia clínica
       const historiaClinica: HistoriaClinica = {
@@ -240,21 +271,30 @@ export class MisTurnosEspecialistaComponent implements OnInit {
         especialista_id: this.especialistaId,
         turno_id: this.turnoAOperar.id,
         fecha_atencion: new Date().toISOString(),
-        altura: parseFloat(alturaStr),
-        peso: parseFloat(pesoStr),
-        temperatura: parseFloat(temperaturaStr),
+        altura: alturaParsed,
+        peso: pesoParsed,
+        temperatura: temperaturaParsed,
         presion: presionStr,
         datos_dinamicos: this.datosDinamicos.map(d => ({ clave: d.clave, valor: d.valor }))
       };
       
-      await this.historiaClinicaService.crearHistoriaClinica(historiaClinica);
+      console.log('📝 [MisTurnosEspecialista] Historia clínica a crear:', historiaClinica);
+      console.log('📝 [MisTurnosEspecialista] Historia clínica JSON:', JSON.stringify(historiaClinica, null, 2));
+      const resultadoHistoria = await this.historiaClinicaService.crearHistoriaClinica(historiaClinica);
+      console.log('✅ [MisTurnosEspecialista] Historia clínica creada:', resultadoHistoria);
       
       this.cerrarModalFinalizar();
       this.mensaje = '¡Turno finalizado con éxito!';
+      console.log('✅ [MisTurnosEspecialista] === FINALIZACIÓN COMPLETADA ===');
       setTimeout(() => { this.mensaje = ''; }, 3500);
       await this.ngOnInit();
-    } catch (error) {
-      this.errorMotivo = 'Error al finalizar el turno';
+    } catch (error: any) {
+      console.error('❌ [MisTurnosEspecialista] === ERROR EN FINALIZACIÓN ===');
+      console.error('❌ [MisTurnosEspecialista] Error completo:', error);
+      console.error('❌ [MisTurnosEspecialista] Error message:', error?.message);
+      console.error('❌ [MisTurnosEspecialista] Error name:', error?.name);
+      console.error('❌ [MisTurnosEspecialista] Error stack:', error?.stack);
+      this.errorMotivo = 'Error al finalizar el turno: ' + (error?.message || 'Error desconocido');
     }
   }
   

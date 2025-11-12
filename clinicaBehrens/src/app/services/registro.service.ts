@@ -11,7 +11,11 @@ export class RegistroService {
   constructor(private supabaseService: SupabaseService) {}
 
   // Registrar un paciente usando autenticación de Supabase
-  async registrarPaciente(paciente: Omit<Paciente, 'id' | 'createdAt' | 'updatedAt'>): Promise<any> {
+  async registrarPaciente(
+    paciente: Omit<Paciente, 'id' | 'createdAt' | 'updatedAt'>,
+    imagenPerfil1?: File,
+    imagenPerfil2?: File
+  ): Promise<any> {
     try {
       console.log('=== INICIO REGISTRO PACIENTE ===');
       console.log('Datos del paciente a registrar:', paciente);
@@ -35,9 +39,28 @@ export class RegistroService {
       
       if (authError) throw authError;
 
-      // 2. Preparar datos del perfil
+      const userId = authData.user?.id;
+      if (!userId) throw new Error('No se pudo obtener el ID del usuario');
+
+      // 2. Subir imágenes a Supabase Storage
+      let imagenPerfil1Url = paciente.imagenPerfil;
+      let imagenPerfil2Url = paciente.imagenPerfil2;
+
+      if (imagenPerfil1) {
+        console.log('2a. Subiendo imagen de perfil 1...');
+        imagenPerfil1Url = await this.subirImagenPerfil(imagenPerfil1, userId);
+        console.log('Imagen 1 URL:', imagenPerfil1Url);
+      }
+
+      if (imagenPerfil2) {
+        console.log('2b. Subiendo imagen de perfil 2...');
+        imagenPerfil2Url = await this.subirImagenPerfil(imagenPerfil2, userId);
+        console.log('Imagen 2 URL:', imagenPerfil2Url);
+      }
+
+      // 3. Preparar datos del perfil
       const perfilData = {
-        user_id: authData.user?.id,
+        user_id: userId,
         nombre: paciente.nombre,
         apellido: paciente.apellido,
         edad: paciente.edad,
@@ -45,17 +68,16 @@ export class RegistroService {
         email: paciente.email,
         obra_social: paciente.obraSocial,
         tipo: 'paciente',
-        imagen_perfil: paciente.imagenPerfil,
-        imagen_perfil2: paciente.imagenPerfil2,
+        imagen_perfil: imagenPerfil1Url,
+        imagen_perfil2: imagenPerfil2Url,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      console.log('2. Datos del perfil a insertar:', perfilData);
-      console.log('User ID a usar:', authData.user?.id);
+      console.log('3. Datos del perfil a insertar:', perfilData);
 
-      // 3. Guardar perfil en tabla personalizada
-      console.log('3. Insertando perfil en tabla perfiles...');
+      // 4. Guardar perfil en tabla personalizada
+      console.log('4. Insertando perfil en tabla perfiles...');
       const { data: profileData, error: profileError } = await this.supabaseService.getSupabase()
         .from('perfiles')
         .insert([perfilData])
@@ -80,7 +102,10 @@ export class RegistroService {
   }
 
   // Registrar un especialista usando autenticación de Supabase
-  async registrarEspecialista(especialista: Omit<Especialista, 'id' | 'createdAt' | 'updatedAt'>): Promise<any> {
+  async registrarEspecialista(
+    especialista: Omit<Especialista, 'id' | 'createdAt' | 'updatedAt'>,
+    imagenPerfil?: File
+  ): Promise<any> {
     try {
       console.log('=== INICIO REGISTRO ESPECIALISTA ===');
       console.log('Datos del especialista a registrar:', especialista);
@@ -104,9 +129,21 @@ export class RegistroService {
 
       if (authError) throw authError;
 
-      // 2. Preparar datos del perfil
+      const userId = authData.user?.id;
+      if (!userId) throw new Error('No se pudo obtener el ID del usuario');
+
+      // 2. Subir imagen a Supabase Storage
+      let imagenPerfilUrl = especialista.imagenPerfil;
+
+      if (imagenPerfil) {
+        console.log('2. Subiendo imagen de perfil...');
+        imagenPerfilUrl = await this.subirImagenPerfil(imagenPerfil, userId);
+        console.log('Imagen URL:', imagenPerfilUrl);
+      }
+
+      // 3. Preparar datos del perfil
       const perfilData = {
-        user_id: authData.user?.id,
+        user_id: userId,
         nombre: especialista.nombre,
         apellido: especialista.apellido,
         edad: especialista.edad,
@@ -114,16 +151,15 @@ export class RegistroService {
         email: especialista.email,
         especialidad: especialista.especialidad,
         tipo: 'especialista',
-        imagen_perfil: especialista.imagenPerfil,
+        imagen_perfil: imagenPerfilUrl,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      console.log('2. Datos del perfil a insertar:', perfilData);
-      console.log('User ID a usar:', authData.user?.id);
+      console.log('3. Datos del perfil a insertar:', perfilData);
 
-      // 3. Guardar perfil en tabla personalizada
-      console.log('3. Insertando perfil en tabla perfiles...');
+      // 4. Guardar perfil en tabla personalizada
+      console.log('4. Insertando perfil en tabla perfiles...');
       const { data: profileData, error: profileError } = await this.supabaseService.getSupabase()
         .from('perfiles')
         .insert([perfilData])
@@ -177,69 +213,56 @@ export class RegistroService {
   async subirImagenPerfil(file: File, userId: string): Promise<string> {
     try {
       console.log('=== INICIO SUBIDA DE IMAGEN ===');
-      console.log('File:', file);
-      console.log('User ID:', userId);
-      
-      // Verificar si el usuario está autenticado
-      const { data: { user }, error: userError } = await this.supabaseService.getSupabase().auth.getUser();
-      console.log('Usuario autenticado:', user);
-      console.log('Error de usuario:', userError);
+      console.log('📁 File:', file.name, '- Size:', (file.size / 1024).toFixed(2), 'KB');
+      console.log('👤 User ID:', userId);
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}_${Date.now()}.${fileExt}`;
       
-      console.log('File extension:', fileExt);
-      console.log('File name:', fileName);
+      console.log('📝 File name final:', fileName);
       
-      // Verificar si el bucket existe
-      console.log('Verificando bucket perfiles...');
-      const { data: buckets, error: bucketsError } = await this.supabaseService.getSupabase()
-        .storage
-        .listBuckets();
-      
-      console.log('Buckets disponibles:', buckets);
-      console.log('Error de buckets:', bucketsError);
-      
-      // Intentar subir archivo
-      console.log('Subiendo archivo a Supabase Storage...');
+      // Intentar subir archivo directamente
+      console.log('⬆️ Subiendo archivo a Supabase Storage bucket "perfiles"...');
       const { data: uploadData, error: uploadError } = await this.supabaseService.getSupabase()
         .storage
         .from('perfiles')
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true // Cambiar a true para permitir reemplazar si existe
         });
 
-      console.log('Upload Data:', uploadData);
-      console.log('Upload Error:', uploadError);
+      console.log('📤 Upload Data:', uploadData);
+      console.log('❌ Upload Error:', uploadError);
 
       if (uploadError) {
-        console.error('ERROR AL SUBIR ARCHIVO:', uploadError);
-        console.error('Error message:', uploadError.message);
+        console.error('🚨 ERROR AL SUBIR ARCHIVO:', uploadError);
+        console.error('🚨 Error message:', uploadError.message);
+        console.error('🚨 Error name:', uploadError.name);
         
         // Si falla la subida, usar una URL temporal para continuar con el registro
-        console.log('Usando URL temporal para continuar con el registro...');
+        console.log('⚠️ Usando URL temporal para continuar con el registro...');
         return `https://via.placeholder.com/150x150/cccccc/666666?text=Imagen+${fileExt?.toUpperCase()}`;
       }
 
       // Obtener URL pública
-      console.log('Obteniendo URL pública...');
+      console.log('🔗 Obteniendo URL pública...');
       const { data: urlData } = this.supabaseService.getSupabase()
         .storage
         .from('perfiles')
         .getPublicUrl(fileName);
 
-      console.log('URL Data:', urlData);
-      console.log('URL pública:', urlData.publicUrl);
-      console.log('=== SUBIDA DE IMAGEN EXITOSA ===');
+      console.log('✅ URL pública obtenida:', urlData.publicUrl);
+      console.log('=== ✅ SUBIDA DE IMAGEN EXITOSA ===\n');
 
       return urlData.publicUrl;
-    } catch (error) {
-      console.error('=== ERROR EN SUBIDA DE IMAGEN ===');
-      console.error('Error completo:', error);
+    } catch (error: any) {
+      console.error('=== ❌ ERROR EN SUBIDA DE IMAGEN ===');
+      console.error('🚨 Error completo:', error);
+      console.error('🚨 Error message:', error?.message);
+      console.error('🚨 Error name:', error?.name);
       
       // En caso de error, usar URL temporal
-      console.log('Usando URL temporal debido a error...');
+      console.log('⚠️ Usando URL temporal debido a error...');
       const fileExt = file.name.split('.').pop();
       return `https://via.placeholder.com/150x150/cccccc/666666?text=Imagen+${fileExt?.toUpperCase()}`;
     }
@@ -371,7 +394,7 @@ export class RegistroService {
   }
 
   // Registrar un administrador usando autenticación de Supabase
-  async registrarAdministrador(admin: any): Promise<any> {
+  async registrarAdministrador(admin: any, imagenPerfil?: File): Promise<any> {
     try {
       console.log('=== INICIO REGISTRO ADMINISTRADOR ===');
       console.log('Datos del administrador a registrar:', admin);
@@ -395,24 +418,36 @@ export class RegistroService {
       
       if (authError) throw authError;
 
-      // 2. Preparar datos del perfil
+      const userId = authData.user?.id;
+      if (!userId) throw new Error('No se pudo obtener el ID del usuario');
+
+      // 2. Subir imagen a Supabase Storage
+      let imagenPerfilUrl = admin.imagenPerfil;
+
+      if (imagenPerfil) {
+        console.log('2. Subiendo imagen de perfil...');
+        imagenPerfilUrl = await this.subirImagenPerfil(imagenPerfil, userId);
+        console.log('Imagen URL:', imagenPerfilUrl);
+      }
+
+      // 3. Preparar datos del perfil
       const perfilData = {
-        user_id: authData.user?.id,
+        user_id: userId,
         nombre: admin.nombre,
         apellido: admin.apellido,
         edad: admin.edad,
         dni: admin.dni,
         email: admin.email,
         tipo: 'administrador',
-        imagen_perfil: admin.imagenPerfil,
+        imagen_perfil: imagenPerfilUrl,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      console.log('2. Datos del perfil a insertar:', perfilData);
+      console.log('3. Datos del perfil a insertar:', perfilData);
 
-      // 3. Guardar perfil en tabla personalizada
-      console.log('3. Insertando perfil en tabla perfiles...');
+      // 4. Guardar perfil en tabla personalizada
+      console.log('4. Insertando perfil en tabla perfiles...');
       const { data: profileData, error: profileError } = await this.supabaseService.getSupabase()
         .from('perfiles')
         .insert([perfilData])
@@ -474,5 +509,56 @@ export class RegistroService {
       .eq('tipo', 'especialista');
     if (error) return [];
     return data || [];
+  }
+
+  // Obtener múltiples perfiles por emails (para acceso rápido)
+  async getPerfilesByEmails(emails: string[]): Promise<any[]> {
+    try {
+      console.log('🔍 Buscando perfiles por emails:', emails);
+      
+      const { data, error } = await this.supabaseService.getSupabase()
+        .from('perfiles')
+        .select('email, nombre, apellido, imagen_perfil, tipo')
+        .in('email', emails);
+
+      if (error) {
+        console.error('❌ Error buscando perfiles:', error);
+        return [];
+      }
+
+      console.log('✅ Perfiles encontrados:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('❌ Error en getPerfilesByEmails:', error);
+      return [];
+    }
+  }
+
+  // Obtener especialidades con imágenes desde la tabla especialidades
+  async getEspecialidadesConImagenes(): Promise<{ nombre: string, imagen: string }[]> {
+    try {
+      console.log('🎨 Obteniendo especialidades con imágenes desde la BD...');
+      
+      const { data, error } = await this.supabaseService.getSupabase()
+        .from('especialidades')
+        .select('nombre, imagen_url')
+        .order('nombre', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error obteniendo especialidades:', error);
+        return [];
+      }
+
+      const especialidades = (data || []).map((esp: any) => ({
+        nombre: esp.nombre,
+        imagen: esp.imagen_url || 'https://cdn-icons-png.flaticon.com/512/2785/2785490.png'
+      }));
+
+      console.log('✅ Especialidades con imágenes cargadas:', especialidades.length);
+      return especialidades;
+    } catch (error) {
+      console.error('❌ Error en getEspecialidadesConImagenes:', error);
+      return [];
+    }
   }
 } 

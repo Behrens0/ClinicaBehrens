@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RegistroService } from '../../services/registro.service';
+import { LogService } from '../../services/log.service';
 
 @Component({
   selector: 'app-login',
@@ -20,24 +21,73 @@ export class LoginComponent implements OnInit {
   sesionActiva = false;
   usuarioActual: any = null;
 
-  // Botones de acceso rápido
+  // Botones de acceso rápido (se cargarán las fotos desde la BD)
   accesoRapido = [
-    { email: 'admin@clinica.com', password: 'admin123', label: 'Admin' },
-    { email: 'paciente@test.com', password: 'paciente123', label: 'Paciente' },
-    { email: 'especialista@test.com', password: 'especialista123', label: 'Especialista' }
+    { 
+      email: 'admin@clinica.com', 
+      password: 'admin123', 
+      label: 'Admin',
+      nombre: 'Dr. Carlos Admin',
+      tipo: 'administrador',
+      foto: 'https://via.placeholder.com/150?text=Admin'
+    },
+    { 
+      email: 'paciente1@test.com', 
+      password: 'paciente123', 
+      label: 'Paciente 1',
+      nombre: 'Juan Pérez',
+      tipo: 'paciente',
+      foto: 'https://via.placeholder.com/150?text=P1'
+    },
+    { 
+      email: 'paciente2@test.com', 
+      password: 'paciente123', 
+      label: 'Paciente 2',
+      nombre: 'María García',
+      tipo: 'paciente',
+      foto: 'https://via.placeholder.com/150?text=P2'
+    },
+    { 
+      email: 'paciente3@test.com', 
+      password: 'paciente123', 
+      label: 'Paciente 3',
+      nombre: 'Pedro López',
+      tipo: 'paciente',
+      foto: 'https://via.placeholder.com/150?text=P3'
+    },
+    { 
+      email: 'especialista1@test.com', 
+      password: 'especialista123', 
+      label: 'Especialista 1',
+      nombre: 'Dra. Ana Martínez',
+      tipo: 'especialista',
+      foto: 'https://via.placeholder.com/150?text=E1'
+    },
+    { 
+      email: 'especialista2@test.com', 
+      password: 'especialista123', 
+      label: 'Especialista 2',
+      nombre: 'Dr. Luis Rodríguez',
+      tipo: 'especialista',
+      foto: 'https://via.placeholder.com/150?text=E2'
+    }
   ];
 
   constructor(
     private fb: FormBuilder,
     private authService: RegistroService,
-    private router: Router
+    private router: Router,
+    private logService: LogService
   ) {
     this.inicializarFormulario();
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Verificar si ya hay una sesión activa
-    this.verificarSesionActiva();
+    await this.verificarSesionActiva();
+    
+    // Cargar las fotos reales desde la base de datos
+    await this.cargarFotosAccesoRapido();
   }
 
   private inicializarFormulario(): void {
@@ -103,6 +153,13 @@ export class LoginComponent implements OnInit {
 
       // Si es administrador, permitir acceso aunque no esté verificado
       if (perfil?.tipo === 'administrador') {
+        // Registrar log de ingreso para admin
+        await this.logService.registrarIngreso(
+          user.id,
+          `${perfil.nombre} ${perfil.apellido}`,
+          perfil.tipo
+        );
+        
         this.mostrarMensaje('Inicio de sesión exitoso', true);
         setTimeout(() => {
           this.router.navigate(['/dashboard-admin']);
@@ -134,7 +191,15 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      // Login exitoso
+      // Login exitoso - Registrar log de ingreso (reutilizar perfil ya obtenido)
+      if (perfil) {
+        await this.logService.registrarIngreso(
+          user.id,
+          `${perfil.nombre} ${perfil.apellido}`,
+          perfil.tipo
+        );
+      }
+      
       this.mostrarMensaje('Inicio de sesión exitoso', true);
       setTimeout(() => {
         this.redirigirSegunTipoUsuario(user.id);
@@ -224,6 +289,41 @@ export class LoginComponent implements OnInit {
     } catch (error) {
       console.error('Error cerrando sesión:', error);
       this.mostrarMensaje('Error al cerrar sesión', false);
+    }
+  }
+
+  // Cargar las fotos reales desde la base de datos
+  private async cargarFotosAccesoRapido(): Promise<void> {
+    try {
+      console.log('🖼️ Cargando fotos de acceso rápido desde la BD...');
+      
+      // Obtener todos los emails del acceso rápido
+      const emails = this.accesoRapido.map(acceso => acceso.email);
+      
+      // Buscar los perfiles en la base de datos
+      const perfiles = await this.authService.getPerfilesByEmails(emails);
+      
+      if (perfiles && perfiles.length > 0) {
+        // Actualizar las fotos y nombres de los accesos rápidos
+        this.accesoRapido = this.accesoRapido.map(acceso => {
+          const perfil = perfiles.find((p: any) => p.email === acceso.email);
+          if (perfil) {
+            return {
+              ...acceso,
+              foto: perfil.imagen_perfil || acceso.foto,
+              nombre: `${perfil.nombre} ${perfil.apellido}` || acceso.nombre
+            };
+          }
+          return acceso;
+        });
+        
+        console.log('✅ Fotos de acceso rápido cargadas:', this.accesoRapido.length);
+      } else {
+        console.log('⚠️ No se encontraron perfiles en la BD, usando fotos por defecto');
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar fotos de acceso rápido:', error);
+      // Si hay error, mantener las fotos por defecto
     }
   }
 

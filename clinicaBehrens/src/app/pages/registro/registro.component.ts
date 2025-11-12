@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CustomValidators } from '../../validators/custom-validators';
 import { RegistroService } from '../../services/registro.service';
 import { EspecialidadesService } from '../../services/especialidades.service';
@@ -11,12 +11,13 @@ import { Paciente, Especialista, Administrador, Especialidad } from '../../model
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.scss'
 })
 export class RegistroComponent implements OnInit {
-  tipoUsuario: 'paciente' | 'especialista' | 'administrador' = 'paciente';
+  tipoUsuario: 'paciente' | 'especialista' | 'administrador' | null = null;
+  mostrarFormulario = false;
   formPaciente!: FormGroup;
   formEspecialista!: FormGroup;
   especialidades: Especialidad[] = [];
@@ -114,6 +115,7 @@ export class RegistroComponent implements OnInit {
 
   seleccionarTipo(tipo: 'paciente' | 'especialista' | 'administrador'): void {
     this.tipoUsuario = tipo;
+    this.mostrarFormulario = true;
     this.limpiarMensajes();
     // Limpiar imágenes y formularios al cambiar tipo
     this.imagenPerfil1 = null;
@@ -124,6 +126,20 @@ export class RegistroComponent implements OnInit {
     this.imagenPerfilEspPreview = null;
     this.formPaciente.reset();
     this.formEspecialista.reset();
+  }
+
+  volverASeleccion(): void {
+    this.mostrarFormulario = false;
+    this.tipoUsuario = null;
+    this.limpiarMensajes();
+    this.formPaciente.reset();
+    this.formEspecialista.reset();
+    this.imagenPerfil1 = null;
+    this.imagenPerfil2 = null;
+    this.imagenPerfil1Preview = null;
+    this.imagenPerfil2Preview = null;
+    this.imagenPerfilEsp = null;
+    this.imagenPerfilEspPreview = null;
   }
 
   onEspecialidadChange(event: any): void {
@@ -236,11 +252,8 @@ export class RegistroComponent implements OnInit {
         this.mostrarMensaje('El DNI ya está registrado', false);
         return;
       }
-      const imagenPerfil1Url = await this.subirImagen(this.imagenPerfil1!);
-      let imagenPerfil2Url: string | undefined;
-      if (this.imagenPerfil2) {
-        imagenPerfil2Url = await this.subirImagen(this.imagenPerfil2);
-      }
+
+      // Preparar datos del paciente (sin las URLs de imágenes todavía)
       const paciente: Omit<Paciente, 'id' | 'createdAt' | 'updatedAt'> = {
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -250,24 +263,33 @@ export class RegistroComponent implements OnInit {
         email: formData.email.toLowerCase(),
         password: formData.password,
         tipo: 'paciente',
-        imagenPerfil: imagenPerfil1Url,
-        imagenPerfil2: imagenPerfil2Url
+        imagenPerfil: '', // Se llenará en el servicio
+        imagenPerfil2: undefined
       };
-      await this.registroService.registrarPaciente(paciente);
-      this.mostrarMensaje('Paciente registrado exitosamente', true);
-      // No loguear automáticamente, solo redirigir a login
+
+      // Pasar los archivos File al servicio para que suba después de crear el usuario
+      await this.registroService.registrarPaciente(
+        paciente,
+        this.imagenPerfil1!,
+        this.imagenPerfil2 || undefined
+      );
+
+      this.mostrarMensaje('✅ Paciente registrado exitosamente. Por favor verifica tu email.', true);
+      
+      // Redirigir a login
       setTimeout(() => {
         this.router.navigate(['/login']);
-      }, 2000);
+      }, 2500);
     } catch (error: any) {
+      console.error('Error en registro paciente:', error);
       if (error.message?.includes('User already registered')) {
-        this.mostrarMensaje('El email ya está registrado', false);
+        this.mostrarMensaje('❌ El email ya está registrado', false);
       } else if (error.message?.includes('Invalid email')) {
-        this.mostrarMensaje('El formato del email no es válido', false);
+        this.mostrarMensaje('❌ El formato del email no es válido', false);
       } else if (error.message?.includes('Password should be at least')) {
-        this.mostrarMensaje('La contraseña debe tener al menos 6 caracteres', false);
+        this.mostrarMensaje('❌ La contraseña debe tener al menos 6 caracteres', false);
       } else {
-        this.mostrarMensaje('Error al registrar el paciente: ' + (error.message || 'Error desconocido'), false);
+        this.mostrarMensaje('❌ Error al registrar el paciente: ' + (error.message || 'Error desconocido'), false);
       }
     } finally {
       this.isLoading = false;
@@ -290,7 +312,8 @@ export class RegistroComponent implements OnInit {
         this.mostrarMensaje('El DNI ya está registrado', false);
         return;
       }
-      const imagenPerfilUrl = await this.subirImagen(this.imagenPerfilEsp!);
+
+      // Preparar datos del especialista (sin la URL de imagen todavía)
       const especialista: Omit<Especialista, 'id' | 'createdAt' | 'updatedAt'> = {
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -300,23 +323,28 @@ export class RegistroComponent implements OnInit {
         email: formData.email.toLowerCase(),
         password: formData.password,
         tipo: 'especialista',
-        imagenPerfil: imagenPerfilUrl
+        imagenPerfil: '' // Se llenará en el servicio
       };
-      await this.registroService.registrarEspecialista(especialista);
-      this.mostrarMensaje('Especialista registrado exitosamente', true);
-      // No loguear automáticamente, solo redirigir a login
+
+      // Pasar el archivo File al servicio para que suba después de crear el usuario
+      await this.registroService.registrarEspecialista(especialista, this.imagenPerfilEsp!);
+
+      this.mostrarMensaje('✅ Especialista registrado exitosamente. Por favor verifica tu email.', true);
+      
+      // Redirigir a login
       setTimeout(() => {
         this.router.navigate(['/login']);
-      }, 2000);
+      }, 2500);
     } catch (error: any) {
+      console.error('Error en registro especialista:', error);
       if (error.message?.includes('User already registered')) {
-        this.mostrarMensaje('El email ya está registrado', false);
+        this.mostrarMensaje('❌ El email ya está registrado', false);
       } else if (error.message?.includes('Invalid email')) {
-        this.mostrarMensaje('El formato del email no es válido', false);
+        this.mostrarMensaje('❌ El formato del email no es válido', false);
       } else if (error.message?.includes('Password should be at least')) {
-        this.mostrarMensaje('La contraseña debe tener al menos 6 caracteres', false);
+        this.mostrarMensaje('❌ La contraseña debe tener al menos 6 caracteres', false);
       } else {
-        this.mostrarMensaje('Error al registrar el especialista: ' + (error.message || 'Error desconocido'), false);
+        this.mostrarMensaje('❌ Error al registrar el especialista: ' + (error.message || 'Error desconocido'), false);
       }
     } finally {
       this.isLoading = false;
@@ -341,8 +369,8 @@ export class RegistroComponent implements OnInit {
         this.mostrarMensaje('El DNI ya está registrado', false);
         return;
       }
-      const imagenPerfilUrl = await this.subirImagen(this.imagenPerfilEsp!);
 
+      // Preparar datos del administrador (sin la URL de imagen todavía)
       const administrador = {
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -351,25 +379,36 @@ export class RegistroComponent implements OnInit {
         email: formData.email.toLowerCase(),
         password: formData.password,
         tipo: 'administrador' as const,
-        imagenPerfil: imagenPerfilUrl
+        imagenPerfil: '' // Se llenará en el servicio
       };
 
-      await this.registroService.registrarAdministrador(administrador);
-      this.mostrarMensaje('Administrador registrado exitosamente', true);
+      // Pasar el archivo File al servicio para que suba después de crear el usuario
+      await this.registroService.registrarAdministrador(administrador, this.imagenPerfilEsp!);
+
+      this.mostrarMensaje('✅ Administrador registrado exitosamente. Por favor verifica tu email.', true);
+      
+      // Limpiar formulario y redirigir
       this.formEspecialista.reset();
       this.imagenPerfilEsp = null;
       this.imagenPerfilEspPreview = null;
+
+      setTimeout(() => {
+        this.router.navigate(['/login']);
+      }, 2500);
     } catch (error: any) {
-      this.mostrarMensaje('Error al registrar el administrador: ' + (error.message || 'Error desconocido'), false);
+      console.error('Error en registro administrador:', error);
+      if (error.message?.includes('User already registered')) {
+        this.mostrarMensaje('❌ El email ya está registrado', false);
+      } else if (error.message?.includes('Invalid email')) {
+        this.mostrarMensaje('❌ El formato del email no es válido', false);
+      } else if (error.message?.includes('Password should be at least')) {
+        this.mostrarMensaje('❌ La contraseña debe tener al menos 6 caracteres', false);
+      } else {
+        this.mostrarMensaje('❌ Error al registrar el administrador: ' + (error.message || 'Error desconocido'), false);
+      }
     } finally {
       this.isLoading = false;
     }
-  }
-
-  private async subirImagen(file: File): Promise<string> {
-    const userId = Date.now().toString();
-    const result = await this.registroService.subirImagenPerfil(file, userId);
-    return result;
   }
 
   private mostrarMensaje(mensaje: string, esExito: boolean): void {
