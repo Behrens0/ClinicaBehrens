@@ -174,6 +174,12 @@ export class RegistroService {
         throw profileError;
       }
 
+      // 5. IMPORTANTE: Cerrar sesión del especialista recién registrado
+      // Los especialistas NO deben autenticarse hasta ser aprobados por un administrador
+      console.log('5. Cerrando sesión automática (especialista debe ser aprobado)...');
+      await this.cerrarSesion();
+      console.log('✅ Sesión cerrada. El especialista debe esperar aprobación.');
+
       console.log('=== REGISTRO ESPECIALISTA EXITOSO ===');
       return { authData, profileData };
     } catch (error) {

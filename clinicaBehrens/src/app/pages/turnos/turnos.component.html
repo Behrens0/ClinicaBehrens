@@ -1,4 +1,4 @@
-<div class="solicitar-turno">
+<div class="solicitar-turno rotate-in">
   <h2>Solicitar Turno</h2>
 
   <div *ngIf="mensaje" class="mensaje" (click)="limpiarMensaje()">{{ mensaje }}</div>
@@ -95,12 +95,22 @@
       </div>
     </div>
 
+    <!-- Captcha Personalizado (Sprint 5) -->
+    <div 
+      *ngIf="horarioSeleccionado && !esAdmin" 
+      class="captcha-section animate-in"
+      appCaptchaPropio 
+      [captchaHabilitado]="captchaHabilitado" 
+      (captchaResuelto)="onCaptchaResuelto($event)"
+      (captchaError)="onCaptchaError($event)">
+    </div>
+
     <!-- Botón de confirmación -->
     <div *ngIf="horarioSeleccionado" class="paso-confirmacion animate-in">
       <button 
         type="button" 
         class="btn-confirmar"
-        [disabled]="!especialidadSeleccionada || !especialistaSeleccionado || !diaSeleccionado || !horarioSeleccionado || (esAdmin && !pacienteSeleccionado)"
+        [disabled]="!especialidadSeleccionada || !especialistaSeleccionado || !diaSeleccionado || !horarioSeleccionado || (esAdmin && !pacienteSeleccionado) || (!esAdmin && captchaHabilitado && !captchaVerificado)"
         (click)="solicitarTurno()"
       >
         ✓ Confirmar Turno

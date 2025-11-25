@@ -1,4 +1,4 @@
-<div class="dashboard-container" *ngIf="!isLoading">
+<div class="dashboard-container fade-in" *ngIf="!isLoading">
   <!-- Header -->
   <div class="dashboard-header">
     <div class="header-info">
@@ -30,7 +30,7 @@
   </div>
 
   <!-- Estadísticas -->
-  <div class="estadisticas-grid">
+  <div class="estadisticas-grid fade-in-delay-1">
     <div class="stat-card pendientes">
       <div class="stat-icon">⏳</div>
       <div class="stat-info">
@@ -57,31 +57,49 @@
   </div>
 
   <!-- Acciones Rápidas -->
-  <div class="acciones-rapidas">
+  <div class="acciones-rapidas slide-in-right">
     <h2>¿Qué deseas hacer?</h2>
     <div class="acciones-grid">
-      <button class="accion-card primary" (click)="irASolicitarTurno()">
+      <button class="accion-card primary" 
+              (click)="irASolicitarTurno()"
+              appEfectoHover 
+              escalaHover="1.03" 
+              colorHover="#3498db"
+              appTooltip="Solicita un turno con el especialista que necesites"
+              tooltipPosition="top">
         <div class="accion-icon">📅</div>
-        <h3>Solicitar Turno</h3>
+        <h3 appResaltar="#e3f2fd">Solicitar Turno</h3>
         <p>Agenda una nueva consulta médica</p>
       </button>
 
-      <button class="accion-card" (click)="irAMisTurnos()">
+      <button class="accion-card" 
+              (click)="irAMisTurnos()"
+              appEfectoHover 
+              escalaHover="1.03" 
+              colorHover="#2ecc71"
+              appTooltip="Ve todos tus turnos: pendientes, finalizados y cancelados"
+              tooltipPosition="top">
         <div class="accion-icon">📋</div>
         <h3>Mis Turnos</h3>
         <p>Gestiona tus turnos pendientes y pasados</p>
       </button>
 
-      <button class="accion-card" (click)="irAMiPerfil()">
+      <button class="accion-card" 
+              (click)="irAMiPerfil()"
+              appEfectoHover 
+              escalaHover="1.03" 
+              colorHover="#9b59b6"
+              appTooltip="Consulta tu historia clínica y actualiza tus datos"
+              tooltipPosition="top">
         <div class="accion-icon">👤</div>
         <h3>Mi Perfil</h3>
-        <p>Ver historia clínica y datos personales</p>
+        <p appResaltar="#f3e5f5">Ver historia clínica y datos personales</p>
       </button>
     </div>
   </div>
 
   <!-- Lista de Próximos Turnos -->
-  <div class="lista-turnos" *ngIf="proximosTurnos.length > 0">
+  <div class="lista-turnos zoom-in-delay" *ngIf="proximosTurnos.length > 0">
     <h2>Todos tus Turnos Activos</h2>
     <div class="turnos-list">
       <div class="turno-item" *ngFor="let turno of proximosTurnos">

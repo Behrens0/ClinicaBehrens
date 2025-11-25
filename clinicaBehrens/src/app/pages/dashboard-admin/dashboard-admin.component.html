@@ -1,34 +1,70 @@
-<div class="dashboard-container">
+<div class="dashboard-container fade-in">
   <h1>Dashboard Administrador</h1>
   <p>Bienvenido al dashboard de administradores</p>
   
-  <!-- Accesos Rápidos -->
-  <div class="quick-access">
+
+  <div class="quick-access slide-in-left">
     <h2>Accesos Rápidos</h2>
     <div class="quick-access-grid">
-      <button routerLink="/mis-turnos-administrador" class="quick-btn">
+      <button routerLink="/mis-turnos-administrador" 
+              class="quick-btn" 
+              appEfectoHover 
+              escalaHover="1.05" 
+              colorHover="#3498db"
+              appTooltip="Gestiona todos los turnos de la clínica"
+              tooltipPosition="top">
         <span class="icon">📋</span>
         <span class="text">Todos los Turnos</span>
       </button>
-      <button routerLink="/turnos" class="quick-btn">
+      <button routerLink="/turnos" 
+              class="quick-btn" 
+              appEfectoHover 
+              escalaHover="1.05" 
+              colorHover="#2ecc71"
+              appTooltip="Solicitar un turno para cualquier paciente"
+              tooltipPosition="top">
         <span class="icon">📅</span>
         <span class="text">Solicitar Turno</span>
       </button>
-      <button routerLink="/registro" class="quick-btn">
+      <button routerLink="/registro" 
+              class="quick-btn" 
+              appEfectoHover 
+              escalaHover="1.05" 
+              colorHover="#e74c3c"
+              appTooltip="Registrar nuevos usuarios en el sistema"
+              tooltipPosition="top">
         <span class="icon">➕</span>
-        <span class="text">Registrar Usuario</span>
+        <span class="text" appResaltar="#fff3cd">Registrar Usuario</span>
       </button>
-      <button routerLink="/historias-clinicas-admin" class="quick-btn">
+      <button routerLink="/historias-clinicas-admin" 
+              class="quick-btn" 
+              appEfectoHover 
+              escalaHover="1.05" 
+              colorHover="#9b59b6"
+              appTooltip="Ver todas las historias clínicas de los pacientes"
+              tooltipPosition="top">
         <span class="icon">📄</span>
         <span class="text">Historias Clínicas</span>
       </button>
-      <button routerLink="/mi-perfil" class="quick-btn">
+      <button routerLink="/mi-perfil" 
+              class="quick-btn" 
+              appEfectoHover 
+              escalaHover="1.05" 
+              colorHover="#34495e"
+              appTooltip="Gestionar tu perfil de administrador"
+              tooltipPosition="top">
         <span class="icon">👤</span>
         <span class="text">Mi Perfil</span>
       </button>
-      <button routerLink="/estadisticas" class="quick-btn">
+      <button routerLink="/estadisticas" 
+              class="quick-btn" 
+              appEfectoHover 
+              escalaHover="1.05" 
+              colorHover="#f39c12"
+              appTooltip="Ver estadísticas y reportes de la clínica"
+              tooltipPosition="top">
         <span class="icon">📊</span>
-        <span class="text">Estadísticas</span>
+        <span class="text" appResaltar="#e8f5e8">Estadísticas</span>
       </button>
     </div>
   </div>
@@ -47,7 +83,7 @@
   </div>
 
   <!-- Especialistas Pendientes -->
-  <div class="section-pendientes" *ngIf="especialistasPendientes.length > 0">
+  <div class="section-pendientes zoom-in" *ngIf="especialistasPendientes.length > 0">
     <h2>Especialistas Pendientes de Aprobación</h2>
     <div class="pendientes-grid">
       <div *ngFor="let esp of especialistasPendientes" class="pendiente-card">
@@ -67,11 +103,23 @@
           </div>
         </div>
         <div class="pendiente-actions">
-          <button (click)="aprobarEspecialista(esp)" class="btn-aprobar">
-            ✓ Aprobar
+          <button (click)="aprobarEspecialista(esp)" 
+                  class="btn-aprobar"
+                  appEfectoHover 
+                  escalaHover="1.08" 
+                  colorHover="#27ae60"
+                  appTooltip="Aprobar especialista y habilitar acceso al sistema"
+                  tooltipPosition="bottom">
+            ✓ <span appResaltar="#d4edda">Aprobar</span>
           </button>
-          <button (click)="rechazarEspecialista(esp)" class="btn-rechazar">
-            ✕ Rechazar
+          <button (click)="rechazarEspecialista(esp)" 
+                  class="btn-rechazar"
+                  appEfectoHover 
+                  escalaHover="1.08" 
+                  colorHover="#e74c3c"
+                  appTooltip="Rechazar especialista y denegar acceso"
+                  tooltipPosition="bottom">
+            ✕ <span appResaltar="#f8d7da">Rechazar</span>
           </button>
         </div>
       </div>

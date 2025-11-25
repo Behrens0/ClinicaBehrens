@@ -22,11 +22,17 @@
         <div class="historia-info">
           <h3>Atención del {{ formatearFecha(historia.historia.fecha_atencion) }}</h3>
           <div class="participantes">
-            <span class="paciente">
-              <strong>Paciente:</strong> {{ historia.paciente.nombre }} {{ historia.paciente.apellido }}
+            <span class="paciente" *ngIf="historia.paciente">
+              <strong>Paciente:</strong> {{ historia.paciente?.nombre }} {{ historia.paciente?.apellido }}
             </span>
-            <span class="especialista">
-              <strong>Especialista:</strong> Dr. {{ historia.especialista.nombre }} {{ historia.especialista.apellido }}
+            <span class="paciente" *ngIf="!historia.paciente">
+              <strong>Paciente:</strong> <em>No disponible</em>
+            </span>
+            <span class="especialista" *ngIf="historia.especialista">
+              <strong>Especialista:</strong> Dr. {{ historia.especialista?.nombre }} {{ historia.especialista?.apellido }}
+            </span>
+            <span class="especialista" *ngIf="!historia.especialista">
+              <strong>Especialista:</strong> <em>No disponible</em>
             </span>
           </div>
         </div>
@@ -38,24 +44,24 @@
           <div class="datos-grid">
             <div class="dato">
               <span class="label">Altura:</span>
-              <span class="valor">{{ historia.historia.altura }}m</span>
+              <span class="valor">{{ historia.historia?.altura }}m</span>
             </div>
             <div class="dato">
               <span class="label">Peso:</span>
-              <span class="valor">{{ historia.historia.peso }}kg</span>
+              <span class="valor">{{ historia.historia?.peso }}kg</span>
             </div>
             <div class="dato">
               <span class="label">Temperatura:</span>
-              <span class="valor">{{ historia.historia.temperatura }}°C</span>
+              <span class="valor">{{ historia.historia?.temperatura }}°C</span>
             </div>
             <div class="dato">
               <span class="label">Presión:</span>
-              <span class="valor">{{ historia.historia.presion }}</span>
+              <span class="valor">{{ historia.historia?.presion }}</span>
             </div>
           </div>
         </div>
 
-        <div *ngIf="historia.historia.datos_dinamicos.length > 0" class="datos-dinamicos">
+        <div *ngIf="historia.historia?.datos_dinamicos && historia.historia.datos_dinamicos.length > 0" class="datos-dinamicos">
           <h4>Datos Dinámicos</h4>
           <div class="datos-grid">
             <div *ngFor="let dato of historia.historia.datos_dinamicos" class="dato">
@@ -65,18 +71,18 @@
           </div>
         </div>
 
-        <div class="turno-info">
+        <div *ngIf="historia.turno" class="turno-info">
           <h4>Información del Turno</h4>
           <div class="datos-grid">
-            <div class="dato">
+            <div class="dato" *ngIf="historia.turno?.fecha">
               <span class="label">Fecha del turno:</span>
               <span class="valor">{{ historia.turno.fecha | date:'dd/MM/yyyy' }}</span>
             </div>
-            <div class="dato">
+            <div class="dato" *ngIf="historia.turno?.hora">
               <span class="label">Hora:</span>
               <span class="valor">{{ historia.turno.hora }}</span>
             </div>
-            <div class="dato">
+            <div class="dato" *ngIf="historia.turno?.estado">
               <span class="label">Estado:</span>
               <span class="valor estado-{{ historia.turno.estado }}">{{ historia.turno.estado }}</span>
             </div>

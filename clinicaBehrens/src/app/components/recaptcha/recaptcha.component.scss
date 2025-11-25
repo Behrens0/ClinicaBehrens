@@ -1,0 +1,32 @@
+.recaptcha-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  
+  #recaptcha-container {
+    transform: scale(1);
+    transform-origin: 0 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .recaptcha-wrapper {
+    #recaptcha-container {
+      transform: scale(0.85);
+      transform-origin: 0 0;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .recaptcha-wrapper {
+    #recaptcha-container {
+      transform: scale(0.75);
+      transform-origin: 0 0;
+    }
+  }
+}
+

@@ -7,11 +7,12 @@ import { Disponibilidad } from '../../models/disponibilidad.model';
 import { HistoriaClinicaService } from '../../services/historia-clinica.service';
 import { HistoriaClinicaCompleta } from '../../models/historia-clinica.model';
 import jsPDF from 'jspdf';
+import { CaptchaPropioDirective } from '../../directives/captcha-propio.directive';
 
 @Component({
   selector: 'app-mi-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CaptchaPropioDirective],
   templateUrl: './mi-perfil.component.html',
   styleUrls: ['./mi-perfil.component.scss']
 })
@@ -30,6 +31,10 @@ export class MiPerfilComponent implements OnInit {
   dias: string[] = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   mensaje: string = '';
   historiasClinicas: HistoriaClinicaCompleta[] = [];
+  
+  // Captcha personalizado (Sprint 5)
+  captchaVerificado: boolean = false;
+  captchaHabilitado: boolean = true; // Puede cambiarse a false para deshabilitar
   
   // Horarios de la clínica
   readonly HORARIO_CLINICA = {
@@ -100,6 +105,12 @@ export class MiPerfilComponent implements OnInit {
   }
 
   agregarDisponibilidad() {
+    // Validar captcha (Sprint 5)
+    if (this.captchaHabilitado && !this.captchaVerificado) {
+      this.mensaje = '⚠️ Por favor completa el captcha de verificación.';
+      return;
+    }
+    
     if (!this.nuevaDisponibilidad.especialidad || !this.nuevaDisponibilidad.dia || !this.nuevaDisponibilidad.hora_inicio || !this.nuevaDisponibilidad.hora_fin) {
       this.mensaje = '❌ Completa todos los campos para agregar disponibilidad.';
       return;
@@ -149,6 +160,8 @@ export class MiPerfilComponent implements OnInit {
     this.disponibilidadService.agregarDisponibilidad(nueva).then(() => {
       this.mensaje = '✅ Disponibilidad agregada correctamente.';
       this.nuevaDisponibilidad = { especialidad: '', dia: '', hora_inicio: '', hora_fin: '' };
+      // Resetear captcha (Sprint 5)
+      this.captchaVerificado = false;
       this.cargarDisponibilidad(userId);
     }).catch(error => {
       this.mensaje = '❌ Error al agregar disponibilidad: ' + error.message;
@@ -179,16 +192,30 @@ export class MiPerfilComponent implements OnInit {
     img.crossOrigin = 'Anonymous';
     img.src = logoUrl;
     img.onload = () => {
+      try {
+        // Convertir la imagen a canvas para obtener un data URL válido
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width || 100;
+        canvas.height = img.height || 100;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          throw new Error('No se pudo crear el contexto del canvas');
+        }
+        
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png');
+        
       // Logo y encabezado
-      doc.addImage(img, 'JPEG', 15, 10, 30, 30);
+        doc.addImage(dataUrl, 'PNG', 15, 5, 30, 30);
       doc.setFontSize(18);
-      doc.text('Historia Clínica', 60, 20);
+        doc.text('Historia Clínica', 60, 15);
       doc.setFontSize(12);
-      doc.text('Fecha de emisión: ' + new Date().toLocaleDateString('es-ES'), 60, 28);
+        doc.text('Fecha de emisión: ' + new Date().toLocaleDateString('es-ES'), 60, 23);
       doc.setLineWidth(0.5);
-      doc.line(15, 35, 195, 35);
+        doc.line(15, 38, 195, 38);
       
-      let y = 45;
+      let y = 48;
       
       // Datos del Paciente
       doc.setFontSize(14);
@@ -262,6 +289,10 @@ export class MiPerfilComponent implements OnInit {
       
       console.log('✅ [MiPerfil] PDF generado exitosamente');
       doc.save('historia-clinica-' + (this.perfil?.nombre || 'paciente') + '.pdf');
+      } catch (error) {
+        console.error('❌ [MiPerfil] Error al procesar el logo:', error);
+        this.generarPDFSinLogo(doc);
+      }
     };
     
     img.onerror = () => {
@@ -293,5 +324,20 @@ export class MiPerfilComponent implements OnInit {
     if (this.perfil?.dni) { doc.text('DNI: ' + this.perfil.dni, 15, y); y += 7; }
     
     doc.save('historia-clinica-' + (this.perfil?.nombre || 'paciente') + '.pdf');
+  }
+
+  // Métodos para manejo del Captcha (Sprint 5)
+  onCaptchaResuelto(correcto: boolean) {
+    this.captchaVerificado = correcto;
+    if (correcto) {
+      console.log('✅ [MiPerfil] Captcha verificado correctamente');
+    } else {
+      console.log('❌ [MiPerfil] Captcha incorrecto');
+    }
+  }
+
+  onCaptchaError(mensaje: string) {
+    console.error('❌ [MiPerfil] Error en captcha:', mensaje);
+    this.captchaVerificado = false;
   }
 }

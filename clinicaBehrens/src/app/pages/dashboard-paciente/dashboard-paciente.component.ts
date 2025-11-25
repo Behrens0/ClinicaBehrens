@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { RegistroService } from '../../services/registro.service';
 import { TurnosService } from '../../services/turnos.service';
+import { EfectoHoverDirective } from '../../directives/efecto-hover.directive';
+import { ResaltarDirective } from '../../directives/resaltar.directive';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-dashboard-paciente',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, EfectoHoverDirective, ResaltarDirective, TooltipDirective],
   templateUrl: './dashboard-paciente.component.html',
   styleUrls: ['./dashboard-paciente.component.scss']
 })

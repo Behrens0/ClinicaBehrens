@@ -8,11 +8,12 @@ import { RegistroService } from '../../services/registro.service';
 import { HistoriaClinica, DatoDinamico } from '../../models/historia-clinica.model';
 import { HistoriaClinicaService } from '../../services/historia-clinica.service';
 import { FormatoFechaPipe } from '../../pipes/formato-fecha.pipe';
+import { EstadoTurnoPipe } from '../../pipes/estado-turno.pipe';
 
 @Component({
   selector: 'app-mis-turnos-especialista',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormatoFechaPipe],
+  imports: [CommonModule, FormsModule, FormatoFechaPipe, EstadoTurnoPipe],
   templateUrl: './mis-turnos-especialista.component.html',
   styleUrls: ['./mis-turnos-especialista.component.scss']
 })
@@ -43,6 +44,11 @@ export class MisTurnosEspecialistaComponent implements OnInit {
   claveDinamica: string = '';
   valorDinamico: string = '';
   errorHistoriaClinica: string = '';
+  
+  // Nuevos datos dinámicos específicos (Sprint 5)
+  nivelSatisfaccion: number = 50; // Control de rango 0-100
+  cantidadEnfermedades: string = ''; // Cuadro de texto numérico
+  requiereSeguimiento: boolean = false; // Switch Si/No
   
   mensaje: string = '';
   resenaAMostrar: string = '';
@@ -209,6 +215,18 @@ export class MisTurnosEspecialistaComponent implements OnInit {
     this.turnoAOperar = null;
     this.resenaFinal = '';
     this.errorMotivo = '';
+    this.errorHistoriaClinica = '';
+    this.altura = '';
+    this.peso = '';
+    this.temperatura = '';
+    this.presion = '';
+    this.datosDinamicos = [];
+    this.claveDinamica = '';
+    this.valorDinamico = '';
+    // Resetear nuevos campos específicos (Sprint 5)
+    this.nivelSatisfaccion = 50;
+    this.cantidadEnfermedades = '';
+    this.requiereSeguimiento = false;
   }
   
   async confirmarFinalizacion() {
@@ -265,6 +283,16 @@ export class MisTurnosEspecialistaComponent implements OnInit {
         presion: presionStr
       });
       
+      // Agregar los 3 nuevos datos dinámicos específicos (Sprint 5)
+      const datosDinamicosCompletos = [
+        ...this.datosDinamicos.map(d => ({ clave: d.clave, valor: d.valor })),
+        { clave: 'Nivel de Satisfacción', valor: String(this.nivelSatisfaccion) },
+        { clave: 'Cantidad de Enfermedades', valor: this.cantidadEnfermedades || '0' },
+        { clave: 'Requiere Seguimiento', valor: this.requiereSeguimiento ? 'Sí' : 'No' }
+      ];
+      
+      console.log('📝 [MisTurnosEspecialista] Datos dinámicos completos:', datosDinamicosCompletos);
+      
       // Crear historia clínica
       const historiaClinica: HistoriaClinica = {
         paciente_id: this.turnoAOperar.pacienteid,
@@ -275,7 +303,7 @@ export class MisTurnosEspecialistaComponent implements OnInit {
         peso: pesoParsed,
         temperatura: temperaturaParsed,
         presion: presionStr,
-        datos_dinamicos: this.datosDinamicos.map(d => ({ clave: d.clave, valor: d.valor }))
+        datos_dinamicos: datosDinamicosCompletos
       };
       
       console.log('📝 [MisTurnosEspecialista] Historia clínica a crear:', historiaClinica);
@@ -362,16 +390,6 @@ export class MisTurnosEspecialistaComponent implements OnInit {
   }
   puedeVerResena(turno: Turno): boolean {
     return !!turno.resena;
-  }
-  estadoTurno(turno: Turno): string {
-    switch (turno.estado) {
-      case 'pendiente': return 'Pendiente';
-      case 'aceptado': return 'Aceptado';
-      case 'realizado': return 'Realizado';
-      case 'cancelado': return 'Cancelado';
-      case 'rechazado': return 'Rechazado';
-      default: return turno.estado;
-    }
   }
 
   crearHistoriaClinica(turnoId: string) {

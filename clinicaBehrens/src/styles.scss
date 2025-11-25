@@ -112,6 +112,10 @@ input, select, textarea {
   }
 }
 
+/* ============================================= */
+/* ANIMACIONES GLOBALES DE TRANSICIÓN           */
+/* ============================================= */
+
 /* Animación de carga global */
 @keyframes fadeIn {
   from {
@@ -126,6 +130,95 @@ input, select, textarea {
 
 .fade-in {
   animation: fadeIn 0.5s ease-out;
+}
+
+/* Animación de deslizamiento desde la izquierda */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+/* Animación de deslizamiento desde la derecha */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.6s ease-out;
+}
+
+/* Animación de zoom suave */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.zoom-in {
+  animation: zoomIn 0.4s ease-out;
+}
+
+/* Animación de rotación y entrada */
+@keyframes rotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.rotate-in {
+  animation: rotateIn 0.7s ease-out;
+}
+
+/* Animaciones con delay para efectos escalonados */
+.fade-in-delay-1 {
+  animation: fadeIn 0.5s ease-out 0.1s both;
+}
+
+.fade-in-delay-2 {
+  animation: fadeIn 0.5s ease-out 0.2s both;
+}
+
+.fade-in-delay-3 {
+  animation: fadeIn 0.5s ease-out 0.3s both;
+}
+
+.slide-in-left-delay {
+  animation: slideInLeft 0.6s ease-out 0.2s both;
+}
+
+.slide-in-right-delay {
+  animation: slideInRight 0.6s ease-out 0.2s both;
+}
+
+.zoom-in-delay {
+  animation: zoomIn 0.4s ease-out 0.3s both;
 }
 
 /* Utilidades comunes */
@@ -161,4 +254,273 @@ input, select, textarea {
   .container {
     padding: 0 15px;
   }
+}
+
+/* ============================================= */
+/* ESTILOS CAPTCHA PERSONALIZADO (SPRINT 5)     */
+/* ============================================= */
+
+.captcha-propio-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  animation: captchaFadeIn 0.5s ease-out;
+}
+
+@keyframes captchaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.captcha-titulo {
+  display: block;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.captcha-pregunta {
+  background: rgba(255, 255, 255, 0.95);
+  color: #667eea;
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.captcha-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+
+  &:focus {
+    outline: none;
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    transform: scale(1.02);
+  }
+
+  &:disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.captcha-botones {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.captcha-btn-verificar,
+.captcha-btn-recargar {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.captcha-btn-verificar {
+  background: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(67, 160, 71, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.captcha-btn-recargar {
+  background: rgba(255, 255, 255, 0.95);
+  color: #764ba2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    background: #fff;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.captcha-mensaje {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.captcha-exito {
+  background: rgba(67, 160, 71, 0.95);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(67, 160, 71, 0.3);
+  animation: captchaSuccess 0.5s ease-out;
+}
+
+.captcha-error {
+  background: rgba(211, 47, 47, 0.95);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+  animation: captchaShake 0.5s ease-out;
+}
+
+@keyframes captchaSuccess {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes captchaShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Responsive Captcha */
+@media (max-width: 768px) {
+  .captcha-propio-container {
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  .captcha-titulo {
+    font-size: 1rem;
+  }
+
+  .captcha-pregunta {
+    font-size: 1.1rem;
+    padding: 12px;
+  }
+
+  .captcha-input {
+    font-size: 1rem;
+    padding: 10px 12px;
+  }
+
+  .captcha-botones {
+    flex-direction: column;
+  }
+
+  .captcha-btn-verificar,
+  .captcha-btn-recargar {
+    width: 100%;
+  }
+}
+
+/* ============================================= */
+/* ESTILOS TOOLTIP PERSONALIZADO                */
+/* ============================================= */
+.custom-tooltip {
+  position: absolute;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #ecf0f1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  max-width: 250px;
+  word-wrap: break-word;
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: all 0.2s ease-out;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-tooltip.tooltip-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Flechas del tooltip */
+.custom-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+
+.tooltip-top::before {
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: #2c3e50;
+}
+
+.tooltip-bottom::before {
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: #2c3e50;
+}
+
+.tooltip-left::before {
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left-color: #2c3e50;
+}
+
+.tooltip-right::before {
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right-color: #2c3e50;
 }

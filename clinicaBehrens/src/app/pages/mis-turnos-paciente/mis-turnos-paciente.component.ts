@@ -8,11 +8,12 @@ import { HistoriaClinica, DatoDinamico } from '../../models/historia-clinica.mod
 import { HistoriaClinicaService } from '../../services/historia-clinica.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { FormatoFechaPipe } from '../../pipes/formato-fecha.pipe';
+import { EstadoTurnoPipe } from '../../pipes/estado-turno.pipe';
 
 @Component({
   selector: 'app-mis-turnos-paciente',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormatoFechaPipe],
+  imports: [CommonModule, FormsModule, FormatoFechaPipe, EstadoTurnoPipe],
   templateUrl: './mis-turnos-paciente.component.html',
   styleUrls: ['./mis-turnos-paciente.component.scss'],
   animations: [
@@ -259,15 +260,5 @@ export class MisTurnosPacienteComponent implements OnInit {
   }
   puedeCalificar(turno: Turno): boolean {
     return turno.estado === 'realizado' && !turno.calificacionatencion;
-  }
-  estadoTurno(turno: Turno): string {
-    switch (turno.estado) {
-      case 'pendiente': return 'Pendiente';
-      case 'aceptado': return 'Aceptado';
-      case 'realizado': return 'Realizado';
-      case 'cancelado': return 'Cancelado';
-      case 'rechazado': return 'Rechazado';
-      default: return turno.estado;
-    }
   }
 }

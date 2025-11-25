@@ -34,40 +34,45 @@
 }
 
 .tipo-cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
   margin-bottom: 30px;
+  flex-wrap: wrap;
 }
 
 .tipo-card {
   background: white;
   border: 3px solid #e9ecef;
-  border-radius: 16px;
-  padding: 32px 24px;
+  border-radius: 50%; // Círculo perfecto
+  width: 280px;
+  height: 280px;
+  padding: 40px 20px;
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  gap: 12px;
   
   &:hover {
     border-color: #007bff;
-    transform: translateY(-4px);
+    transform: scale(1.05);
     box-shadow: 0 8px 20px rgba(0, 123, 255, 0.2);
   }
   
   .tipo-imagen {
-    width: 120px;
-    height: 120px;
-    border-radius: 12px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; // Círculo perfecto también
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-    padding: 16px;
+    padding: 20px;
     transition: all 0.3s ease;
     
     img {
@@ -88,7 +93,7 @@
   
   h3 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: #333;
     font-weight: 600;
   }
@@ -96,8 +101,8 @@
   p {
     margin: 0;
     color: #666;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    font-size: 0.85rem;
+    line-height: 1.4;
   }
 }
 
@@ -439,17 +444,28 @@ input:focus, select:focus {
   }
   
   .tipo-cards {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    gap: 30px;
   }
   
   .tipo-card {
+    width: 240px;
+    height: 240px;
+    padding: 30px 15px;
+    margin: 0 auto;
+    
     .tipo-imagen {
-      width: 100px;
-      height: 100px;
+      width: 80px;
+      height: 80px;
+      padding: 16px;
     }
     
     h3 {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
+    }
+    
+    p {
+      font-size: 0.8rem;
     }
   }
   
@@ -477,19 +493,236 @@ input:focus, select:focus {
   }
   
   .tipo-card {
-    padding: 24px 16px;
+    width: 200px;
+    height: 200px;
+    padding: 20px 10px;
     
     .tipo-imagen {
-      width: 80px;
-      height: 80px;
+      width: 60px;
+      height: 60px;
+      padding: 12px;
     }
     
     h3 {
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
     
     p {
-      font-size: 0.9rem;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// ========== Especialidades (checkboxes) ==========
+.especialidades-group {
+  margin-bottom: 25px;
+}
+
+.especialidades-info {
+  margin: 8px 0;
+  
+  small {
+    color: #666;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+}
+
+.especialidades-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 16px;
+  border: 2px solid #e9ecef;
+  margin-bottom: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.especialidad-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 20px;
+  border-radius: 50%; // Círculo perfecto
+  transition: all 0.3s ease;
+  width: 120px;
+  height: 120px;
+  background: white;
+  border: 3px solid #e9ecef;
+  position: relative;
+  
+  &:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+    transform: scale(1.05);
+  }
+  
+  input[type="checkbox"] {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    margin: 0;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    accent-color: #007bff;
+    
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+  
+  .checkbox-text {
+    font-size: 0.85rem;
+    color: #333;
+    text-transform: capitalize;
+    user-select: none;
+    text-align: center;
+    line-height: 1.3;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+  
+  // Cuando está seleccionado (texto)
+  input[type="checkbox"]:checked ~ .checkbox-text {
+    font-weight: 700;
+    color: #007bff;
+  }
+  
+  // Estilo del círculo cuando está seleccionado (moderno)
+  &:has(input[type="checkbox"]:checked) {
+    background: linear-gradient(135deg, #e7f3ff 0%, #cfe5ff 100%);
+    border-color: #007bff;
+    border-width: 4px;
+  }
+  
+  // Fallback para navegadores sin soporte de :has()
+  input[type="checkbox"]:checked {
+    & ~ .checkbox-text {
+      font-weight: 700;
+      color: #007bff;
+    }
+  }
+}
+
+.agregar-especialidad-section {
+  margin-top: 16px;
+  
+  .btn-toggle-nueva {
+    padding: 10px 16px;
+    background: #f8f9fa;
+    border: 2px dashed #6c757d;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #495057;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: #e9ecef;
+      border-color: #495057;
+    }
+  }
+  
+  .nueva-especialidad {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    
+    input {
+      flex: 1;
+      padding: 10px 14px;
+    }
+    
+    .btn-agregar {
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s ease;
+      white-space: nowrap;
+      
+      &:hover:not(:disabled) {
+        background: #218838;
+      }
+      
+      &:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Responsive para especialidades
+@media (max-width: 768px) {
+  .especialidades-container {
+    max-height: 300px;
+    gap: 16px;
+  }
+  
+  .checkbox-label {
+    width: 100px;
+    height: 100px;
+    padding: 16px;
+    
+    .checkbox-text {
+      font-size: 0.75rem;
+    }
+    
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .especialidades-container {
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .checkbox-label {
+    width: 80px;
+    height: 80px;
+    padding: 12px;
+    
+    .checkbox-text {
+      font-size: 0.65rem;
+    }
+    
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      top: 4px;
+      right: 4px;
+    }
+  }
+  
+  .agregar-especialidad-section .nueva-especialidad {
+    flex-direction: column;
+    
+    .btn-agregar {
+      width: 100%;
     }
   }
 }

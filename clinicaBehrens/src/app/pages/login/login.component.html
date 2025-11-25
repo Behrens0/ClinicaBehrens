@@ -1,4 +1,4 @@
-<div class="login-container">
+<div class="login-container slide-in-left">
   <div class="login-wrapper">
   <div class="login-card">
     <!-- Header -->
@@ -69,6 +69,15 @@
           <span *ngIf="loginForm.get('password')?.errors?.['required']">La contraseña es requerida</span>
           <span *ngIf="loginForm.get('password')?.errors?.['minlength']">La contraseña debe tener al menos 6 caracteres</span>
         </div>
+      </div>
+
+      <!-- Google reCAPTCHA -->
+      <div class="recaptcha-section">
+        <app-recaptcha
+          [siteKey]="recaptchaSiteKey"
+          (resolved)="onRecaptchaResolved($event)"
+          (errored)="onRecaptchaError()"
+        ></app-recaptcha>
       </div>
 
       <!-- Botón de Login -->

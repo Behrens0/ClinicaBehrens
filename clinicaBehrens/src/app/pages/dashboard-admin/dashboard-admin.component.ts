@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RegistroService } from '../../services/registro.service';
 import * as XLSX from 'xlsx';
+import { EfectoHoverDirective } from '../../directives/efecto-hover.directive';
+import { ResaltarDirective } from '../../directives/resaltar.directive';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-dashboard-admin',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, EfectoHoverDirective, ResaltarDirective, TooltipDirective],
   templateUrl: './dashboard-admin.component.html',
   styleUrls: ['./dashboard-admin.component.scss']
 })

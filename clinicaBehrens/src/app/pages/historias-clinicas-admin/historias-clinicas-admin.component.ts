@@ -23,16 +23,34 @@ export class HistoriasClinicasAdminComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    console.log('🔵 [HistoriasAdmin] Iniciando carga de historias...');
     this.cargarHistorias();
   }
 
   cargarHistorias() {
+    console.log('🔵 [HistoriasAdmin] === CARGANDO HISTORIAS ===');
+    
     this.historiaClinicaService.getTodasHistorias().subscribe({
       next: (historias) => {
+        console.log('📤 [HistoriasAdmin] Historias recibidas:', historias);
+        console.log('📊 [HistoriasAdmin] Cantidad:', historias?.length || 0);
+        
         this.historias = historias || [];
         this.historiasFiltradas = [...this.historias];
+        
+        console.log('✅ [HistoriasAdmin] Historias almacenadas:', this.historias.length);
+        
+        // Log de muestra de la primera historia para verificar estructura
+        if (this.historias.length > 0) {
+          console.log('📋 [HistoriasAdmin] Muestra de primera historia:', {
+            historia: this.historias[0].historia,
+            paciente: this.historias[0].paciente,
+            especialista: this.historias[0].especialista
+          });
+        }
       },
       error: (error) => {
+        console.error('❌ [HistoriasAdmin] Error al cargar historias:', error);
         this.mensaje = 'Error al cargar las historias clínicas';
         console.error(error);
       }
@@ -55,19 +73,24 @@ export class HistoriasClinicasAdminComponent implements OnInit {
     
     switch (this.filtroTipo) {
       case 'paciente':
-        this.historiasFiltradas = this.historias.filter(h => 
-          `${h.paciente.nombre} ${h.paciente.apellido}`.toLowerCase().includes(filtroLower)
-        );
+        this.historiasFiltradas = this.historias.filter(h => {
+          if (!h.paciente) return false;
+          const nombreCompleto = `${h.paciente.nombre || ''} ${h.paciente.apellido || ''}`.toLowerCase();
+          return nombreCompleto.includes(filtroLower);
+        });
         break;
       case 'especialista':
-        this.historiasFiltradas = this.historias.filter(h => 
-          `${h.especialista.nombre} ${h.especialista.apellido}`.toLowerCase().includes(filtroLower)
-        );
+        this.historiasFiltradas = this.historias.filter(h => {
+          if (!h.especialista) return false;
+          const nombreCompleto = `${h.especialista.nombre || ''} ${h.especialista.apellido || ''}`.toLowerCase();
+          return nombreCompleto.includes(filtroLower);
+        });
         break;
       case 'especialidad':
-        this.historiasFiltradas = this.historias.filter(h => 
-          h.especialista.especialidad?.toLowerCase().includes(filtroLower)
-        );
+        this.historiasFiltradas = this.historias.filter(h => {
+          if (!h.especialista || !h.especialista.especialidad) return false;
+          return h.especialista.especialidad.toLowerCase().includes(filtroLower);
+        });
         break;
     }
   }

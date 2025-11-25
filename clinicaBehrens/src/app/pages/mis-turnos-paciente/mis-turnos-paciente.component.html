@@ -35,19 +35,10 @@
         <td>{{ turno.fecha | date:'HH:mm' }}</td>
         <td>
           <span class="estado-{{ turno.estado }}">
-            <ng-container [ngSwitch]="turno.estado">
-              <span *ngSwitchCase="'pendiente'">Pendiente</span>
-              <span *ngSwitchCase="'confirmado'">Confirmado</span>
-              <span *ngSwitchCase="'aceptado'">Aceptado</span>
-              <span *ngSwitchCase="'realizado'">Realizado</span>
-              <span *ngSwitchCase="'rechazado'">Rechazado</span>
-              <span *ngSwitchCase="'cancelado'">Cancelado</span>
-              <span *ngSwitchDefault>{{ turno.estado | titlecase }}</span>
-            </ng-container>
+            {{ turno.estado | estadoTurno }}
           </span>
         </td>
         <td>
-          <!-- PACIENTE: Cancelar, Ver Reseña, Encuesta, Calificar -->
           <span *ngIf="puedeCancelar(turno)">
             <button class="btn-cancelar" (click)="abrirModalCancelar(turno)">Cancelar</button>
           </span>

@@ -1,18 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RegistroService } from '../../services/registro.service';
 import { LogService } from '../../services/log.service';
+import { RecaptchaComponent } from '../../components/recaptcha/recaptcha.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RecaptchaComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
+  @ViewChild(RecaptchaComponent) recaptchaComponent!: RecaptchaComponent;
+  
   loginForm!: FormGroup;
   isLoading = false;
   mensaje = '';
@@ -20,6 +23,10 @@ export class LoginComponent implements OnInit {
   mostrarPassword = false;
   sesionActiva = false;
   usuarioActual: any = null;
+
+  // Google reCAPTCHA
+  recaptchaToken: string = '';
+  recaptchaSiteKey: string = '6LfDxwksAAAAAC0Do2awi3AZ5CmHtOiYdlHU0DKo'; // Clave real de Google reCAPTCHA v2
 
   // Botones de acceso rápido (se cargarán las fotos desde la BD)
   accesoRapido = [
@@ -137,6 +144,12 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    // Verificar reCAPTCHA
+    if (!this.verificarRecaptcha()) {
+      this.mostrarMensaje('Por favor completa el reCAPTCHA', false);
+      return;
+    }
+
     this.isLoading = true;
     this.limpiarMensajes();
 
@@ -201,6 +214,13 @@ export class LoginComponent implements OnInit {
       }
       
       this.mostrarMensaje('Inicio de sesión exitoso', true);
+      
+      // Resetear reCAPTCHA después de login exitoso
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
+      
       setTimeout(() => {
         this.redirigirSegunTipoUsuario(user.id);
       }, 1500);
@@ -217,9 +237,29 @@ export class LoginComponent implements OnInit {
       } else {
         this.mostrarMensaje('Error al iniciar sesión: ' + (error.message || 'Error desconocido'), false);
       }
+      // Resetear reCAPTCHA en caso de error
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
     } finally {
       this.isLoading = false;
     }
+  }
+
+  // Google reCAPTCHA handlers
+  onRecaptchaResolved(token: string): void {
+    this.recaptchaToken = token;
+    console.log('reCAPTCHA resuelto:', token ? 'Token obtenido' : 'Token vacío');
+  }
+
+  onRecaptchaError(): void {
+    this.recaptchaToken = '';
+    this.mostrarMensaje('Error al cargar reCAPTCHA. Por favor recarga la página.', false);
+  }
+
+  verificarRecaptcha(): boolean {
+    return this.recaptchaToken !== '';
   }
 
   private async redirigirSegunTipoUsuario(userId: string): Promise<void> {

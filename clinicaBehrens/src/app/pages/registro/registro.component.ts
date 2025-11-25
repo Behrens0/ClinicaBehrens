@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -7,30 +7,33 @@ import { CustomValidators } from '../../validators/custom-validators';
 import { RegistroService } from '../../services/registro.service';
 import { EspecialidadesService } from '../../services/especialidades.service';
 import { Paciente, Especialista, Administrador, Especialidad } from '../../models/usuario.model';
+import { RecaptchaComponent } from '../../components/recaptcha/recaptcha.component';
 
 @Component({
   selector: 'app-registro',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, RecaptchaComponent],
   templateUrl: './registro.component.html',
   styleUrl: './registro.component.scss'
 })
 export class RegistroComponent implements OnInit {
+  @ViewChild(RecaptchaComponent) recaptchaComponent!: RecaptchaComponent;
+  
   tipoUsuario: 'paciente' | 'especialista' | 'administrador' | null = null;
   mostrarFormulario = false;
   formPaciente!: FormGroup;
   formEspecialista!: FormGroup;
   especialidades: Especialidad[] = [];
+  especialidadesSeleccionadas: string[] = []; // Array de especialidades seleccionadas
   mostrarNuevaEspecialidad = false;
   isLoading = false;
   mensaje = '';
   esExito = false;
   esAdmin = false;
 
-  // Variables para captcha propio
-  captchaPregunta: string = '';
-  captchaRespuesta: string = '';
-  captchaCorrecta: number = 0;
+  // Google reCAPTCHA
+  recaptchaToken: string = '';
+  recaptchaSiteKey: string = '6LfDxwksAAAAAC0Do2awi3AZ5CmHtOiYdlHU0DKo'; // Clave real de Google reCAPTCHA v2
 
   // Variables para manejo de imágenes
   imagenPerfil1: File | null = null;
@@ -51,7 +54,6 @@ export class RegistroComponent implements OnInit {
 
   async ngOnInit() {
     this.cargarEspecialidades();
-    this.generarCaptcha();
     // Verificar si el usuario logueado es admin
     const session = await this.registroService.getSesionActual();
     const user = session?.data?.session?.user;
@@ -82,7 +84,6 @@ export class RegistroComponent implements OnInit {
       apellido: ['', [Validators.required]],
       edad: ['', [Validators.required, CustomValidators.edadValidator()]],
       dni: ['', [Validators.required, CustomValidators.dniValidator()]],
-      especialidad: [''],
       nuevaEspecialidad: [''],
       email: ['', [Validators.required, CustomValidators.emailValidator()]],
       password: ['', [Validators.required, CustomValidators.passwordValidator()]],
@@ -117,7 +118,7 @@ export class RegistroComponent implements OnInit {
     this.tipoUsuario = tipo;
     this.mostrarFormulario = true;
     this.limpiarMensajes();
-    // Limpiar imágenes y formularios al cambiar tipo
+    // Limpiar imágenes, formularios y reCAPTCHA al cambiar tipo
     this.imagenPerfil1 = null;
     this.imagenPerfil2 = null;
     this.imagenPerfil1Preview = null;
@@ -126,6 +127,8 @@ export class RegistroComponent implements OnInit {
     this.imagenPerfilEspPreview = null;
     this.formPaciente.reset();
     this.formEspecialista.reset();
+    this.recaptchaToken = '';
+    this.especialidadesSeleccionadas = []; // Limpiar especialidades seleccionadas
   }
 
   volverASeleccion(): void {
@@ -140,19 +143,39 @@ export class RegistroComponent implements OnInit {
     this.imagenPerfil2Preview = null;
     this.imagenPerfilEsp = null;
     this.imagenPerfilEspPreview = null;
+    this.recaptchaToken = '';
+    this.especialidadesSeleccionadas = []; // Limpiar especialidades seleccionadas
+    if (this.recaptchaComponent) {
+      this.recaptchaComponent.reset();
+    }
   }
 
-  onEspecialidadChange(event: any): void {
-    const especialidad = event.target.value;
-    this.mostrarNuevaEspecialidad = especialidad === 'nueva';
-    if (especialidad === 'nueva') {
-      this.formEspecialista.patchValue({ especialidad: '' });
+  // Seleccionar/deseleccionar especialidad
+  toggleEspecialidad(especialidad: string): void {
+    const index = this.especialidadesSeleccionadas.indexOf(especialidad);
+    
+    if (index > -1) {
+      // Ya está seleccionada, la removemos
+      this.especialidadesSeleccionadas.splice(index, 1);
+    } else {
+      // No está seleccionada
+      if (this.especialidadesSeleccionadas.length >= 3) {
+        this.mostrarMensaje('Puedes seleccionar máximo 3 especialidades', false);
+        return;
+      }
+      this.especialidadesSeleccionadas.push(especialidad);
     }
+  }
+
+  // Verificar si una especialidad está seleccionada
+  isEspecialidadSeleccionada(especialidad: string): boolean {
+    return this.especialidadesSeleccionadas.includes(especialidad);
   }
 
   agregarEspecialidad(): void {
     const nuevaEspecialidad = this.formEspecialista.get('nuevaEspecialidad')?.value;
     if (!nuevaEspecialidad) return;
+    
     this.especialidadesService.agregarEspecialidad({
       nombre: nuevaEspecialidad.toLowerCase(),
       descripcion: '',
@@ -160,12 +183,15 @@ export class RegistroComponent implements OnInit {
     }).subscribe({
       next: (especialidad) => {
         this.especialidades.push(especialidad);
+        // Agregar automáticamente la nueva especialidad a las seleccionadas
+        if (this.especialidadesSeleccionadas.length < 3) {
+          this.especialidadesSeleccionadas.push(especialidad.nombre);
+        }
         this.formEspecialista.patchValue({ 
-          especialidad: especialidad.nombre,
           nuevaEspecialidad: ''
         });
         this.mostrarNuevaEspecialidad = false;
-        this.mostrarMensaje('Especialidad agregada exitosamente', true);
+        this.mostrarMensaje('Especialidad agregada y seleccionada exitosamente', true);
       },
       error: (error) => {
         console.error('Error al agregar especialidad:', error);
@@ -174,17 +200,19 @@ export class RegistroComponent implements OnInit {
     });
   }
 
-  // Captcha propio: genera una suma aleatoria
-  generarCaptcha() {
-    const a = Math.floor(Math.random() * 10) + 1;
-    const b = Math.floor(Math.random() * 10) + 1;
-    this.captchaPregunta = `¿Cuánto es ${a} + ${b}?`;
-    this.captchaCorrecta = a + b;
-    this.captchaRespuesta = '';
+  // Google reCAPTCHA handlers
+  onRecaptchaResolved(token: string): void {
+    this.recaptchaToken = token;
+    console.log('reCAPTCHA resuelto:', token ? 'Token obtenido' : 'Token vacío');
   }
 
-  verificarCaptcha(): boolean {
-    return Number(this.captchaRespuesta) === this.captchaCorrecta;
+  onRecaptchaError(): void {
+    this.recaptchaToken = '';
+    this.mostrarMensaje('Error al cargar reCAPTCHA. Por favor recarga la página.', false);
+  }
+
+  verificarRecaptcha(): boolean {
+    return this.recaptchaToken !== '';
   }
 
   // Métodos para manejo de imágenes
@@ -243,6 +271,13 @@ export class RegistroComponent implements OnInit {
       }
       return;
     }
+
+    // Verificar reCAPTCHA
+    if (!this.verificarRecaptcha()) {
+      this.mostrarMensaje('Por favor completa el reCAPTCHA', false);
+      return;
+    }
+
     this.isLoading = true;
     this.limpiarMensajes();
     try {
@@ -276,6 +311,12 @@ export class RegistroComponent implements OnInit {
 
       this.mostrarMensaje('✅ Paciente registrado exitosamente. Por favor verifica tu email.', true);
       
+      // Resetear reCAPTCHA
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
+      
       // Redirigir a login
       setTimeout(() => {
         this.router.navigate(['/login']);
@@ -291,6 +332,11 @@ export class RegistroComponent implements OnInit {
       } else {
         this.mostrarMensaje('❌ Error al registrar el paciente: ' + (error.message || 'Error desconocido'), false);
       }
+      // Resetear reCAPTCHA en caso de error
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
     } finally {
       this.isLoading = false;
     }
@@ -303,6 +349,19 @@ export class RegistroComponent implements OnInit {
       }
       return;
     }
+
+    // Validar que se haya seleccionado al menos una especialidad
+    if (this.especialidadesSeleccionadas.length === 0) {
+      this.mostrarMensaje('Debes seleccionar al menos una especialidad', false);
+      return;
+    }
+
+    // Verificar reCAPTCHA
+    if (!this.verificarRecaptcha()) {
+      this.mostrarMensaje('Por favor completa el reCAPTCHA', false);
+      return;
+    }
+
     this.isLoading = true;
     this.limpiarMensajes();
     try {
@@ -313,13 +372,16 @@ export class RegistroComponent implements OnInit {
         return;
       }
 
+      // Concatenar especialidades seleccionadas separadas por comas
+      const especialidadesString = this.especialidadesSeleccionadas.join(',');
+
       // Preparar datos del especialista (sin la URL de imagen todavía)
       const especialista: Omit<Especialista, 'id' | 'createdAt' | 'updatedAt'> = {
         nombre: formData.nombre,
         apellido: formData.apellido,
         edad: formData.edad,
         dni: formData.dni,
-        especialidad: formData.especialidad,
+        especialidad: especialidadesString, // Múltiples especialidades separadas por comas
         email: formData.email.toLowerCase(),
         password: formData.password,
         tipo: 'especialista',
@@ -329,12 +391,19 @@ export class RegistroComponent implements OnInit {
       // Pasar el archivo File al servicio para que suba después de crear el usuario
       await this.registroService.registrarEspecialista(especialista, this.imagenPerfilEsp!);
 
-      this.mostrarMensaje('✅ Especialista registrado exitosamente. Por favor verifica tu email.', true);
+      this.mostrarMensaje('✅ Especialista registrado exitosamente. Un administrador debe aprobar tu cuenta antes de poder iniciar sesión. Por favor verifica tu email.', true);
+      
+      // Resetear reCAPTCHA y especialidades
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
+      this.especialidadesSeleccionadas = [];
       
       // Redirigir a login
       setTimeout(() => {
         this.router.navigate(['/login']);
-      }, 2500);
+      }, 4000);
     } catch (error: any) {
       console.error('Error en registro especialista:', error);
       if (error.message?.includes('User already registered')) {
@@ -346,6 +415,12 @@ export class RegistroComponent implements OnInit {
       } else {
         this.mostrarMensaje('❌ Error al registrar el especialista: ' + (error.message || 'Error desconocido'), false);
       }
+      // Resetear reCAPTCHA y especialidades en caso de error
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
+      this.especialidadesSeleccionadas = [];
     } finally {
       this.isLoading = false;
     }
@@ -356,6 +431,12 @@ export class RegistroComponent implements OnInit {
       if (!this.imagenPerfilEsp) {
         this.mostrarMensaje('Debes seleccionar una imagen de perfil', false);
       }
+      return;
+    }
+
+    // Verificar reCAPTCHA
+    if (!this.verificarRecaptcha()) {
+      this.mostrarMensaje('Por favor completa el reCAPTCHA', false);
       return;
     }
 
@@ -391,6 +472,12 @@ export class RegistroComponent implements OnInit {
       this.formEspecialista.reset();
       this.imagenPerfilEsp = null;
       this.imagenPerfilEspPreview = null;
+      
+      // Resetear reCAPTCHA
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
 
       setTimeout(() => {
         this.router.navigate(['/login']);
@@ -406,6 +493,11 @@ export class RegistroComponent implements OnInit {
       } else {
         this.mostrarMensaje('❌ Error al registrar el administrador: ' + (error.message || 'Error desconocido'), false);
       }
+      // Resetear reCAPTCHA en caso de error
+      if (this.recaptchaComponent) {
+        this.recaptchaComponent.reset();
+      }
+      this.recaptchaToken = '';
     } finally {
       this.isLoading = false;
     }
@@ -420,13 +512,8 @@ export class RegistroComponent implements OnInit {
     this.mensaje = '';
   }
 
-  // Método para submit general
+  // Método para submit general (ya no se usa con reCAPTCHA, cada formulario maneja su propio submit)
   async onSubmit() {
-    if (!this.verificarCaptcha()) {
-      this.mostrarMensaje('Captcha incorrecto. Intenta de nuevo.', false);
-      this.generarCaptcha();
-      return;
-    }
     if (this.tipoUsuario === 'paciente') {
       await this.registrarPaciente();
     } else if (this.tipoUsuario === 'especialista') {

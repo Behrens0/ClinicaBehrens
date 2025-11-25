@@ -5,11 +5,12 @@ import { RegistroService } from '../../services/registro.service';
 import { DisponibilidadService } from '../../services/disponibilidad.service';
 import { TurnosService } from '../../services/turnos.service';
 import { Disponibilidad } from '../../models/disponibilidad.model';
+import { CaptchaPropioDirective } from '../../directives/captcha-propio.directive';
 
 @Component({
   selector: 'app-turnos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CaptchaPropioDirective],
   templateUrl: './turnos.component.html',
   styleUrls: ['./turnos.component.scss']
 })
@@ -30,6 +31,10 @@ export class TurnosComponent implements OnInit {
   diaSeleccionado: string = '';
   horarioSeleccionado: { hora_inicio: string, hora_fin: string } | null = null;
   mensaje: string = '';
+  
+  // Captcha personalizado (Sprint 5)
+  captchaVerificado: boolean = false;
+  captchaHabilitado: boolean = true; // Puede cambiarse a false para deshabilitar
 
   constructor(
     private registroService: RegistroService,
@@ -167,6 +172,13 @@ export class TurnosComponent implements OnInit {
   async solicitarTurno() {
     console.log('🟢 [TurnosComponent] Iniciando solicitud de turno...');
     
+    // Validar captcha (Sprint 5)
+    if (this.captchaHabilitado && !this.captchaVerificado) {
+      this.mensaje = '⚠️ Por favor completa el captcha de verificación.';
+      console.warn('⚠️ Captcha no verificado');
+      return;
+    }
+    
     if (!this.especialidadSeleccionada || !this.especialistaSeleccionado || !this.diaSeleccionado || !this.horarioSeleccionado) {
       this.mensaje = 'Completa todos los campos para solicitar el turno.';
       console.warn('⚠️ Faltan campos por completar');
@@ -234,6 +246,9 @@ export class TurnosComponent implements OnInit {
       console.log('✅ Resultado del servicio:', resultado);
       
       this.mensaje = '✅ Turno solicitado correctamente.';
+      
+      // Resetear captcha (Sprint 5)
+      this.captchaVerificado = false;
       
       // Limpiar selección después de 2 segundos
       setTimeout(() => {
@@ -356,5 +371,20 @@ export class TurnosComponent implements OnInit {
     const period = hours >= 12 ? 'pm' : 'am';
     const hours12 = hours % 12 || 12;
     return `${hours12}:${minutes.toString().padStart(2, '0')}${period}`;
+  }
+
+  // Métodos para manejo del Captcha (Sprint 5)
+  onCaptchaResuelto(correcto: boolean) {
+    this.captchaVerificado = correcto;
+    if (correcto) {
+      console.log('✅ [TurnosComponent] Captcha verificado correctamente');
+    } else {
+      console.log('❌ [TurnosComponent] Captcha incorrecto');
+    }
+  }
+
+  onCaptchaError(mensaje: string) {
+    console.error('❌ [TurnosComponent] Error en captcha:', mensaje);
+    this.captchaVerificado = false;
   }
 }

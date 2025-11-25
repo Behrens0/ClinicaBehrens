@@ -1,4 +1,4 @@
-<div class="mi-perfil">
+<div class="mi-perfil slide-in-right">
   <h2>Mi Perfil</h2>
 
   <div *ngIf="perfil">
@@ -90,7 +90,21 @@
         <input type="time" [(ngModel)]="nuevaDisponibilidad.hora_inicio" name="hora_inicio" required />
         <label>Hora fin:</label>
         <input type="time" [(ngModel)]="nuevaDisponibilidad.hora_fin" name="hora_fin" required />
-        <button type="submit">Agregar</button>
+        
+        <!-- Captcha Personalizado (Sprint 5) -->
+        <div 
+          class="captcha-section-disponibilidad"
+          appCaptchaPropio 
+          [captchaHabilitado]="captchaHabilitado" 
+          (captchaResuelto)="onCaptchaResuelto($event)"
+          (captchaError)="onCaptchaError($event)">
+        </div>
+        
+        <button 
+          type="submit" 
+          [disabled]="captchaHabilitado && !captchaVerificado">
+          Agregar
+        </button>
       </form>
 
       <div class="disponibilidad-lista">

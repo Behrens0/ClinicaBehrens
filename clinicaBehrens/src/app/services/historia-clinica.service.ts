@@ -65,48 +65,69 @@ export class HistoriaClinicaService {
   }
 
   // Obtener historias clínicas de un paciente
-  getHistoriasPorPaciente(pacienteId: string): Observable<any[]> {
+  async getHistoriasPorPacienteAsync(pacienteId: string): Promise<any[]> {
     console.log('🔵 [HistoriaClinicaService] === OBTENER HISTORIAS POR PACIENTE ===');
     console.log('📋 [HistoriaClinicaService] Paciente ID:', pacienteId);
     
-    return from(this.supabaseService.getSupabase()
-      .from('historias_clinicas')
-      .select(`
-        *,
-        especialista:perfiles!especialista_id(user_id, nombre, apellido, email, tipo),
-        paciente:perfiles!paciente_id(user_id, nombre, apellido, email, tipo),
-        turno:turnos(id, fecha, especialidad)
-      `)
-      .eq('paciente_id', pacienteId)
-      .order('fecha_atencion', { ascending: false }))
-      .pipe(
-        map(({ data, error }) => {
-          console.log('📤 [HistoriaClinicaService] Respuesta de Supabase:', { data, error });
-          
-          if (error) {
-            console.error('❌ [HistoriaClinicaService] Error al obtener historias:', error);
-            throw error;
-          }
-          
-          console.log('📋 [HistoriaClinicaService] Historias encontradas:', data);
-          console.log('📋 [HistoriaClinicaService] Cantidad de historias:', data?.length || 0);
-          
-          const historiasFormateadas = (data || []).map(d => {
-            // Supabase devuelve los datos anidados, necesitamos extraerlos
-            const { especialista, paciente, turno, ...historia } = d;
-            return { 
-              historia, 
-              especialista: especialista || null, 
-              paciente: paciente || null, 
-              turno: turno || null 
-            };
-          });
-          
-          console.log('✅ [HistoriaClinicaService] Historias formateadas:', historiasFormateadas);
-          
-          return historiasFormateadas;
-        })
-      );
+    try {
+      // 1. Obtener historias clínicas
+      const { data: historias, error: errorHistorias } = await this.supabaseService.getSupabase()
+        .from('historias_clinicas')
+        .select('*')
+        .eq('paciente_id', pacienteId)
+        .order('fecha_atencion', { ascending: false });
+      
+      if (errorHistorias) {
+        console.error('❌ [HistoriaClinicaService] Error al obtener historias:', errorHistorias);
+        throw errorHistorias;
+      }
+      
+      console.log('📋 [HistoriaClinicaService] Historias encontradas:', historias);
+      console.log('📊 [HistoriaClinicaService] Cantidad:', historias?.length || 0);
+      
+      if (!historias || historias.length === 0) {
+        return [];
+      }
+      
+      // 2. Obtener IDs únicos de especialistas
+      const especialistaIds = [...new Set(historias.map(h => h.especialista_id))];
+      console.log('👨‍⚕️ [HistoriaClinicaService] IDs de especialistas:', especialistaIds);
+      
+      // 3. Obtener datos de especialistas
+      const { data: especialistas, error: errorEsp } = await this.supabaseService.getSupabase()
+        .from('perfiles')
+        .select('user_id, nombre, apellido, email, tipo')
+        .in('user_id', especialistaIds);
+      
+      if (errorEsp) {
+        console.error('❌ [HistoriaClinicaService] Error al obtener especialistas:', errorEsp);
+      }
+      
+      console.log('👨‍⚕️ [HistoriaClinicaService] Especialistas encontrados:', especialistas);
+      
+      // 4. Combinar datos
+      const historiasCompletas = historias.map(historia => {
+        const especialista = especialistas?.find(e => e.user_id === historia.especialista_id);
+        return {
+          historia,
+          especialista: especialista || null,
+          paciente: null,
+          turno: null
+        };
+      });
+      
+      console.log('✅ [HistoriaClinicaService] Historias completas:', historiasCompletas);
+      
+      return historiasCompletas;
+    } catch (error: any) {
+      console.error('❌ [HistoriaClinicaService] Error crítico:', error);
+      throw error;
+    }
+  }
+  
+  // Obtener historias clínicas de un paciente (versión Observable para compatibilidad)
+  getHistoriasPorPaciente(pacienteId: string): Observable<any[]> {
+    return from(this.getHistoriasPorPacienteAsync(pacienteId));
   }
 
   // Obtener historias clínicas por especialista
@@ -128,20 +149,82 @@ export class HistoriaClinicaService {
   }
 
   // Obtener todas las historias clínicas (para administradores)
+  async getTodasHistoriasAsync(): Promise<any[]> {
+    console.log('🔵 [HistoriaClinicaService] === OBTENER TODAS LAS HISTORIAS (ADMIN) ===');
+    
+    try {
+      // 1. Obtener todas las historias clínicas
+      const { data: historias, error: errorHistorias } = await this.supabaseService.getSupabase()
+        .from('historias_clinicas')
+        .select('*')
+        .order('fecha_atencion', { ascending: false });
+      
+      if (errorHistorias) {
+        console.error('❌ [HistoriaClinicaService] Error al obtener historias:', errorHistorias);
+        throw errorHistorias;
+      }
+      
+      console.log('📋 [HistoriaClinicaService] Historias encontradas:', historias);
+      console.log('📊 [HistoriaClinicaService] Cantidad:', historias?.length || 0);
+      
+      if (!historias || historias.length === 0) {
+        return [];
+      }
+      
+      // 2. Obtener IDs únicos de pacientes y especialistas
+      const pacienteIds = [...new Set(historias.map(h => h.paciente_id))];
+      const especialistaIds = [...new Set(historias.map(h => h.especialista_id))];
+      
+      console.log('👥 [HistoriaClinicaService] IDs de pacientes:', pacienteIds);
+      console.log('👨‍⚕️ [HistoriaClinicaService] IDs de especialistas:', especialistaIds);
+      
+      // 3. Obtener datos de pacientes
+      const { data: pacientes, error: errorPac } = await this.supabaseService.getSupabase()
+        .from('perfiles')
+        .select('user_id, nombre, apellido, email, tipo, dni, edad, obra_social')
+        .in('user_id', pacienteIds);
+      
+      if (errorPac) {
+        console.error('❌ [HistoriaClinicaService] Error al obtener pacientes:', errorPac);
+      }
+      
+      // 4. Obtener datos de especialistas
+      const { data: especialistas, error: errorEsp } = await this.supabaseService.getSupabase()
+        .from('perfiles')
+        .select('user_id, nombre, apellido, email, tipo, especialidad')
+        .in('user_id', especialistaIds);
+      
+      if (errorEsp) {
+        console.error('❌ [HistoriaClinicaService] Error al obtener especialistas:', errorEsp);
+      }
+      
+      console.log('👥 [HistoriaClinicaService] Pacientes encontrados:', pacientes?.length || 0);
+      console.log('👨‍⚕️ [HistoriaClinicaService] Especialistas encontrados:', especialistas?.length || 0);
+      
+      // 5. Combinar datos
+      const historiasCompletas = historias.map(historia => {
+        const paciente = pacientes?.find(p => p.user_id === historia.paciente_id);
+        const especialista = especialistas?.find(e => e.user_id === historia.especialista_id);
+        return {
+          historia,
+          paciente: paciente || null,
+          especialista: especialista || null,
+          turno: null
+        };
+      });
+      
+      console.log('✅ [HistoriaClinicaService] Historias completas:', historiasCompletas.length);
+      
+      return historiasCompletas;
+    } catch (error: any) {
+      console.error('❌ [HistoriaClinicaService] Error crítico:', error);
+      throw error;
+    }
+  }
+  
+  // Obtener todas las historias clínicas (versión Observable para compatibilidad)
   getTodasHistorias(): Observable<any[]> {
-    return from(this.supabaseService.getSupabase()
-      .from('historias_clinicas')
-      .select('*')
-      .order('fecha_atencion', { ascending: false }))
-      .pipe(
-        map(({ data, error }) => {
-          if (error) {
-            console.error('❌ Error al obtener historias:', error);
-            throw error;
-          }
-          return (data || []).map(d => ({ historia: d, paciente: null, especialista: null, turno: null }));
-        })
-      );
+    return from(this.getTodasHistoriasAsync());
   }
 
   // Obtener pacientes atendidos por un especialista

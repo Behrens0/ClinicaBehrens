@@ -5,11 +5,12 @@ import { TurnosService } from '../../services/turnos.service';
 import { Turno } from '../../models/turno.model';
 import { RegistroService } from '../../services/registro.service';
 import { FormatoFechaPipe } from '../../pipes/formato-fecha.pipe';
+import { EstadoTurnoPipe } from '../../pipes/estado-turno.pipe';
 
 @Component({
   selector: 'app-mis-turnos-administrador',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormatoFechaPipe],
+  imports: [CommonModule, FormsModule, FormatoFechaPipe, EstadoTurnoPipe],
   templateUrl: './mis-turnos-administrador.component.html',
   styleUrls: ['./mis-turnos-administrador.component.scss']
 })
@@ -117,15 +118,5 @@ export class MisTurnosAdministradorComponent implements OnInit {
 
   puedeCancelar(turno: Turno): boolean {
     return turno.estado !== 'aceptado' && turno.estado !== 'realizado' && turno.estado !== 'rechazado';
-  }
-  estadoTurno(turno: Turno): string {
-    switch (turno.estado) {
-      case 'pendiente': return 'Pendiente';
-      case 'aceptado': return 'Aceptado';
-      case 'realizado': return 'Realizado';
-      case 'cancelado': return 'Cancelado';
-      case 'rechazado': return 'Rechazado';
-      default: return turno.estado;
-    }
   }
 }

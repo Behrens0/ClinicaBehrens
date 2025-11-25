@@ -1,4 +1,4 @@
-<div class="mis-turnos-container">
+<div class="mis-turnos-container fade-in">
   <h2>Turnos Asignados</h2>
   
   <div *ngIf="mensaje" class="mensaje-exito-turno">
@@ -35,15 +35,7 @@
         <td>{{ turno.fecha | date:'HH:mm' }}</td>
         <td>
           <span class="estado-{{ turno.estado }}">
-            <ng-container [ngSwitch]="turno.estado">
-              <span *ngSwitchCase="'pendiente'">Pendiente</span>
-              <span *ngSwitchCase="'confirmado'">Confirmado</span>
-              <span *ngSwitchCase="'aceptado'">Aceptado</span>
-              <span *ngSwitchCase="'realizado'">Realizado</span>
-              <span *ngSwitchCase="'rechazado'">Rechazado</span>
-              <span *ngSwitchCase="'cancelado'">Cancelado</span>
-              <span *ngSwitchDefault>{{ turno.estado | titlecase }}</span>
-            </ng-container>
+            {{ turno.estado | estadoTurno }}
           </span>
         </td>
         <td>
@@ -122,6 +114,50 @@
               {{dato.clave}}: {{dato.valor}}
               <button type="button" (click)="eliminarDatoDinamico(i)">x</button>
             </span>
+          </div>
+          
+          <!-- Nuevos datos dinámicos específicos (Sprint 5) -->
+          <div class="datos-especificos-sprint5">
+            <h5>Datos Específicos Adicionales</h5>
+            
+            <div class="control-rango">
+              <label>Nivel de Satisfacción (0-100): <strong>{{nivelSatisfaccion}}</strong></label>
+              <input 
+                type="range" 
+                [(ngModel)]="nivelSatisfaccion" 
+                name="nivelSatisfaccion" 
+                min="0" 
+                max="100" 
+                step="1" 
+                class="range-input" />
+            </div>
+            
+            <div class="control-numerico">
+              <label>Cantidad de Enfermedades:
+                <input 
+                  type="number" 
+                  [(ngModel)]="cantidadEnfermedades" 
+                  name="cantidadEnfermedades" 
+                  placeholder="Ingrese la cantidad" 
+                  class="input-numerico" 
+                  min="0" />
+              </label>
+            </div>
+            
+            <div class="control-switch">
+              <label class="switch-label">
+                <span>¿Requiere Seguimiento?</span>
+                <div class="toggle-switch">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="requiereSeguimiento" 
+                    name="requiereSeguimiento" 
+                    id="switchSeguimiento" />
+                  <label for="switchSeguimiento" class="slider"></label>
+                  <span class="estado-texto">{{ requiereSeguimiento ? 'Sí' : 'No' }}</span>
+                </div>
+              </label>
+            </div>
           </div>
         </div>
         <p>Por favor, ingresa una reseña o comentario de la consulta:</p>
